@@ -24,19 +24,59 @@ interface AnalysisResult {
   summary: string;
 }
 
-// Prices based on credit repair type
-const LETTER_PRICES: Record<string, { label: string; price: number }> = {
-  'COLLECTION': { label: 'Collection Dispute', price: 75 },
-  'BUREAU_DISPUTE': { label: 'Bureau Dispute', price: 50 },
-  'IDENTITY_THEFT': { label: 'Identity Theft', price: 100 },
-  'GOODWILL': { label: 'Goodwill Letter', price: 35 },
-  'NEGOTIATION': { label: 'Debt Negotiation', price: 75 },
-  'FOLLOW_UP': { label: 'Follow-Up Letter', price: 25 },
-  'VIOLATION': { label: 'FCRA Violation', price: 150 },
-  'INQUIRY': { label: 'Inquiry Removal', price: 50 },
-  'LATE_PAYMENT': { label: 'Late Payment Dispute', price: 50 },
-  'CREDITOR_DISPUTE': { label: 'Creditor Dispute', price: 65 },
-  'CUSTOM': { label: 'Custom Price', price: 0 },
+// Prices based on credit repair type with customer-facing explanations
+const LETTER_PRICES: Record<string, { label: string; price: number; script: string }> = {
+  'COLLECTION': {
+    label: 'Collection Dispute',
+    price: 75,
+    script: "This letter challenges the collection agency to prove they have the legal right to collect this debt. Under federal law, they must provide complete documentation within 30 days or remove it from your report. Collections can drop your score by 100+ points, so removing even one can make a significant difference in your creditworthiness."
+  },
+  'BUREAU_DISPUTE': {
+    label: 'Bureau Dispute',
+    price: 50,
+    script: "This letter goes directly to the credit bureau demanding they verify the accuracy of the item. By law, they have 30 days to investigate or they must remove it. This is often the fastest path to removal because bureaus receive millions of disputes and frequently can't verify items in time."
+  },
+  'IDENTITY_THEFT': {
+    label: 'Identity Theft',
+    price: 100,
+    script: "Identity theft cases require specialized documentation including affidavits and police reports. This comprehensive letter package establishes that you're a victim of fraud, which legally requires the bureaus to block the fraudulent information within 4 business days. We handle all the complex paperwork so nothing falls through the cracks."
+  },
+  'GOODWILL': {
+    label: 'Goodwill Letter',
+    price: 35,
+    script: "This is a professionally crafted appeal to your creditor's customer retention department. We highlight your positive payment history and loyal relationship to request they remove the late payment as a goodwill gesture. While not legally required to comply, many creditors do - especially for customers with otherwise good standing."
+  },
+  'NEGOTIATION': {
+    label: 'Debt Negotiation',
+    price: 75,
+    script: "This letter opens negotiations with your creditor for a pay-for-delete or settlement arrangement. We leverage their desire to recover funds against your need for credit repair. Many creditors will agree to remove negative reporting in exchange for payment, saving you years of waiting for items to age off."
+  },
+  'FOLLOW_UP': {
+    label: 'Follow-Up Letter',
+    price: 25,
+    script: "When bureaus or creditors don't respond within the legal timeframe, this follow-up letter documents their violation and demands immediate action. It puts them on notice that you're tracking deadlines and are prepared to escalate if necessary. Often, this is what finally gets results."
+  },
+  'VIOLATION': {
+    label: 'FCRA Violation',
+    price: 150,
+    script: "This is our most powerful letter. When a bureau or creditor violates the Fair Credit Reporting Act, you may be entitled to $1,000 per violation plus attorney fees. This letter formally documents their violation and demands both removal AND statutory damages. It often results in immediate deletion because they want to avoid legal liability."
+  },
+  'INQUIRY': {
+    label: 'Inquiry Removal',
+    price: 50,
+    script: "Hard inquiries can drop your score 5-10 points each and stay for 2 years. This letter challenges unauthorized inquiries - ones you didn't give written permission for. Under the FCRA, inquiries without permissible purpose must be removed. Clearing these gives you a quick score boost."
+  },
+  'LATE_PAYMENT': {
+    label: 'Late Payment Dispute',
+    price: 50,
+    script: "Late payments are one of the most damaging items on your report - a single 30-day late can drop your score 100 points. This letter challenges the accuracy of the late payment reporting, demanding the creditor provide proof of the exact payment dates and their reporting procedures. Any discrepancy means removal."
+  },
+  'CREDITOR_DISPUTE': {
+    label: 'Creditor Dispute',
+    price: 65,
+    script: "Rather than going through the bureau, this letter goes directly to the company reporting the information. This is often more effective because the creditor must conduct their own investigation and respond within 30 days. If they can't verify every detail, they must notify the bureaus to correct or delete the item."
+  },
+  'CUSTOM': { label: 'Custom Price', price: 0, script: '' },
 };
 
 const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setLetters }) => {
@@ -551,16 +591,28 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                    <div>
-                      <p className="text-sm text-slate-600">
-                        {selectedTemplate ? LETTER_PRICES[DISPUTE_TEMPLATES.find(t => t.id === selectedTemplate)?.category || '']?.label || 'Select a letter' : 'Select a letter type'}
-                      </p>
+                  <>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
+                      <div>
+                        <p className="text-sm text-slate-600">
+                          {selectedTemplate ? LETTER_PRICES[DISPUTE_TEMPLATES.find(t => t.id === selectedTemplate)?.category || '']?.label || 'Select a letter' : 'Select a letter type'}
+                        </p>
+                      </div>
+                      <div className="text-2xl font-black text-green-600">
+                        ${letterPrice.toFixed(2)}
+                      </div>
                     </div>
-                    <div className="text-2xl font-black text-green-600">
-                      ${letterPrice.toFixed(2)}
-                    </div>
-                  </div>
+
+                    {/* Customer Script */}
+                    {selectedTemplate && LETTER_PRICES[DISPUTE_TEMPLATES.find(t => t.id === selectedTemplate)?.category || '']?.script && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <p className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-1">Why This Price (Read to Customer)</p>
+                        <p className="text-sm text-blue-900 leading-relaxed">
+                          {LETTER_PRICES[DISPUTE_TEMPLATES.find(t => t.id === selectedTemplate)?.category || '']?.script}
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
