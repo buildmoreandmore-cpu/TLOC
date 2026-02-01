@@ -14,7 +14,7 @@ const Login: React.FC<Props> = ({ onLogin }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'twatson26' && password === 'watson1965') {
+    if (username === 'admin' && password === 'TLC@2024!') {
       onLogin(true);
       navigate('/dashboard');
     } else {
@@ -69,8 +69,8 @@ const Login: React.FC<Props> = ({ onLogin }) => {
         </form>
         
         <div className="mt-12 text-center">
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Demo Credentials</p>
-          <p className="text-slate-300 text-xs mt-2">twatson26 / watson1965</p>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Admin Access</p>
+          <p className="text-slate-300 text-xs mt-2">Contact administrator for credentials</p>
         </div>
       </div>
     </div>
