@@ -28,10 +28,8 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black group-hover:scale-110 transition">3</div>
-            <span className="text-xl font-extrabold tracking-tight text-black hidden sm:block">Three Level Credit</span>
-            <span className="text-xl font-extrabold tracking-tight text-black sm:hidden">3LC</span>
+          <Link to="/" className="flex items-center group">
+            <img src="/logo.png" alt="Three Level Credit" className="h-10 sm:h-12 group-hover:scale-105 transition" />
           </Link>
 
           {/* Desktop Menu */}

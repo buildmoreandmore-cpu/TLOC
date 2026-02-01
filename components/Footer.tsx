@@ -42,9 +42,8 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">3</div>
-              <span className="text-2xl font-black tracking-tight">Three Level Credit</span>
+            <Link to="/" className="mb-6 block">
+              <img src="/logo.png" alt="Three Level Credit" className="h-14 brightness-0 invert" />
             </Link>
             <p className="text-slate-400 leading-relaxed mb-6 max-w-sm">
               Professional credit improvement services. Our three-level approach helps you achieve your financial goals.
