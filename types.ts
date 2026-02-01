@@ -3,6 +3,7 @@ export interface Client {
   id: string;
   name: string;
   email: string;
+  phone?: string;         // For SMS notifications
   token: string;
   score: number;
   status: 'active' | 'onboarding' | 'completed';

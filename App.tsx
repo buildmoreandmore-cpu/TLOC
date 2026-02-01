@@ -126,7 +126,7 @@ const App: React.FC = () => {
                 <div className="flex h-screen bg-slate-100 overflow-hidden">
                   <AdminSidebar onLogout={handleLogout} />
                   <div className="flex-1 overflow-auto p-4 md:p-8">
-                    <AdminLetters letters={letters} setLetters={setLetters} />
+                    <AdminLetters letters={letters} setLetters={setLetters} clients={clients} />
                   </div>
                 </div>
               </AdminRoute>
