@@ -12,19 +12,19 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-12">
           <div className="flex items-center gap-12">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center font-black group-hover:scale-110 transition">T</div>
+              <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black group-hover:scale-110 transition">T</div>
               <span className="text-xl font-extrabold tracking-tight text-black">Three Level of Credit</span>
             </Link>
             <div className="hidden lg:flex items-center gap-8">
               <Link to="/" className={isActive('/')}>Home</Link>
               <Link to="/services" className={isActive('/services')}>Services</Link>
               <Link to="/resources" className={isActive('/resources')}>Resources</Link>
-              <Link to="/contact" className={isActive('/contact')}>Support</Link>
+              <Link to="/contact" className={isActive('/contact')}>Contact</Link>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/login" className="text-slate-900 font-semibold px-4 hover:opacity-70 transition">Log in</Link>
-            <Link to="/contact" className="bg-black text-white px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition active:scale-95">Sign up for free</Link>
+            <Link to="/login" className="text-slate-900 font-semibold px-4 hover:opacity-70 transition">Client Login</Link>
+            <Link to="/contact" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition active:scale-95">Free Consultation</Link>
           </div>
         </div>
       </div>
