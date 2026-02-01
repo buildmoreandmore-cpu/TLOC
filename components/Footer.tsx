@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Phone, Mail, MapPin } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -49,25 +49,9 @@ const Footer: React.FC = () => {
             <p className="text-slate-400 leading-relaxed mb-6 max-w-sm">
               Professional credit improvement services. Our three-level approach helps you achieve your financial goals.
             </p>
-            <div className="flex items-center gap-2 text-sm text-blue-400 font-medium mb-8">
+            <div className="flex items-center gap-2 text-sm text-blue-400 font-medium">
               <Shield className="h-4 w-4" />
               <span>Results-Driven Credit Solutions</span>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-3">
-              <a href="tel:+1234567890" className="flex items-center gap-3 text-slate-400 hover:text-white transition">
-                <Phone className="h-4 w-4" />
-                <span>(123) 456-7890</span>
-              </a>
-              <a href="mailto:info@threelevelcredit.com" className="flex items-center gap-3 text-slate-400 hover:text-white transition">
-                <Mail className="h-4 w-4" />
-                <span>info@threelevelcredit.com</span>
-              </a>
-              <div className="flex items-center gap-3 text-slate-400">
-                <MapPin className="h-4 w-4" />
-                <span>Atlanta, GA</span>
-              </div>
             </div>
           </div>
 
