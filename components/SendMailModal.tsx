@@ -10,7 +10,6 @@ import {
   RecipientAddress,
   SenderAddress,
 } from '../mailService';
-import { notifyLetterSent, isValidPhoneNumber } from '../smsService';
 import {
   X,
   Mail,
@@ -21,8 +20,6 @@ import {
   ExternalLink,
   Loader2,
   DollarSign,
-  MessageSquare,
-  Phone,
 } from 'lucide-react';
 import DocumentChecklist from './DocumentChecklist';
 
@@ -31,12 +28,11 @@ interface Props {
   onClose: () => void;
   onSendSuccess: (letterId: string, mailData: Partial<DisputeLetter>) => void;
   clientAddress?: SenderAddress;
-  clientPhone?: string;
 }
 
 type ModalStep = 'options' | 'checklist' | 'sending' | 'success' | 'error';
 
-const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, clientAddress, clientPhone }) => {
+const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, clientAddress }) => {
   const [step, setStep] = useState<ModalStep>('options');
   const [selectedProvider, setSelectedProvider] = useState<MailProvider>('lob');
   const [selectedBureau, setSelectedBureau] = useState<string>(letter.bureau || '');
@@ -50,12 +46,6 @@ const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, client
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checklistComplete, setChecklistComplete] = useState(false);
-
-  // SMS notification state
-  const [sendSmsNotification, setSendSmsNotification] = useState(!!clientPhone);
-  const [smsPhone, setSmsPhone] = useState(clientPhone || '');
-  const [smsSent, setSmsSent] = useState(false);
-  const [smsError, setSmsError] = useState<string | null>(null);
 
   const providers = getAvailableProviders();
   const templateRequirements = getTemplateRequirements(letter.templateId);
@@ -160,25 +150,6 @@ const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, client
         cost: result.cost,
       });
 
-      // Send SMS notification if enabled
-      if (sendSmsNotification && smsPhone && isValidPhoneNumber(smsPhone)) {
-        try {
-          const smsResult = await notifyLetterSent(
-            smsPhone,
-            letter.clientName,
-            selectedBureau,
-            result.trackingNumber
-          );
-          if (smsResult.success) {
-            setSmsSent(true);
-          } else {
-            setSmsError(smsResult.error || 'Failed to send SMS');
-          }
-        } catch (smsErr) {
-          setSmsError('Failed to send SMS notification');
-        }
-      }
-
       // Update letter with mail data
       onSendSuccess(letter.id, {
         status: 'processing',
@@ -216,31 +187,6 @@ const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, client
     if (sendResult?.trackingNumber) {
       const trackingUrl = `https://tools.usps.com/go/TrackConfirmAction?tLabels=${sendResult.trackingNumber.replace(/\s/g, '')}`;
       window.open(trackingUrl, '_blank');
-    }
-  };
-
-  // Send SMS notification after the fact (for manual sends or retries)
-  const handleSendSmsNow = async () => {
-    if (!smsPhone || !isValidPhoneNumber(smsPhone)) {
-      setSmsError('Please enter a valid phone number');
-      return;
-    }
-
-    try {
-      const smsResult = await notifyLetterSent(
-        smsPhone,
-        letter.clientName,
-        selectedBureau,
-        sendResult?.trackingNumber
-      );
-      if (smsResult.success) {
-        setSmsSent(true);
-        setSmsError(null);
-      } else {
-        setSmsError(smsResult.error || 'Failed to send SMS');
-      }
-    } catch (err) {
-      setSmsError('Failed to send SMS notification');
     }
   };
 
@@ -363,47 +309,8 @@ const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, client
                 </div>
               </button>
 
-              {/* SMS Notification Option */}
-              <div className="mt-6 pt-4 border-t border-slate-200">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={sendSmsNotification}
-                    onChange={(e) => setSendSmsNotification(e.target.checked)}
-                    className="mt-1 h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-slate-500" />
-                      <span className="font-medium text-slate-700">Notify client via text</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Send SMS when letter is mailed
-                    </p>
-                  </div>
-                </label>
-
-                {sendSmsNotification && (
-                  <div className="mt-3 ml-7">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      <input
-                        type="tel"
-                        value={smsPhone}
-                        onChange={(e) => setSmsPhone(e.target.value)}
-                        placeholder="(555) 123-4567"
-                        className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    {smsPhone && !isValidPhoneNumber(smsPhone) && (
-                      <p className="text-xs text-red-500 mt-1 ml-6">Enter a valid phone number</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
               {/* Provider comparison */}
-              <div className="pt-4">
+              <div className="mt-6 pt-4 border-t border-slate-200">
                 <button
                   className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"
                   onClick={() => {/* Could expand to show more providers */}}
@@ -474,57 +381,6 @@ const SendMailModal: React.FC<Props> = ({ letter, onClose, onSendSuccess, client
                   <p className="font-bold text-slate-900">{formatCost(sendResult.cost)}</p>
                 </div>
               </div>
-
-              {/* SMS Notification Status */}
-              {sendSmsNotification && (
-                <div className={`mb-4 p-3 rounded-lg ${smsSent ? 'bg-green-50 border border-green-200' : smsError ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className={`h-4 w-4 ${smsSent ? 'text-green-600' : smsError ? 'text-red-600' : 'text-slate-500'}`} />
-                    {smsSent ? (
-                      <span className="text-sm font-medium text-green-700">Client notified via text</span>
-                    ) : smsError ? (
-                      <div className="flex-1">
-                        <span className="text-sm font-medium text-red-700">{smsError}</span>
-                        <button
-                          onClick={handleSendSmsNow}
-                          className="ml-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          Retry
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-slate-600">SMS notification pending</span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Send SMS Now option if not already sent */}
-              {!sendSmsNotification && !smsSent && (
-                <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MessageSquare className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm font-medium text-slate-700">Notify client?</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="tel"
-                      value={smsPhone}
-                      onChange={(e) => setSmsPhone(e.target.value)}
-                      placeholder="Phone number"
-                      className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                    />
-                    <button
-                      onClick={handleSendSmsNow}
-                      disabled={!smsPhone || !isValidPhoneNumber(smsPhone)}
-                      className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition"
-                    >
-                      Send Text
-                    </button>
-                  </div>
-                  {smsError && <p className="text-xs text-red-500 mt-1">{smsError}</p>}
-                </div>
-              )}
 
               <div className="flex gap-3">
                 {sendResult.trackingNumber && (

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { DisputeLetter, Client } from '../types';
+import { DisputeLetter } from '../types';
 import { DISPUTE_TEMPLATES } from '../constants';
 import { getDaysUntilDeadline, formatCost, trackMailingStatus } from '../mailService';
 import SendMailModal from '../components/SendMailModal';
@@ -28,7 +28,6 @@ import {
 interface Props {
   letters: DisputeLetter[];
   setLetters?: React.Dispatch<React.SetStateAction<DisputeLetter[]>>;
-  clients?: Client[];
 }
 
 type WorkflowStatus = 'needs_notary' | 'ready_to_mail' | 'processing' | 'in_transit' | 'delivered' | 'awaiting_response' | 'response_received' | 'completed' | 'all';
@@ -120,11 +119,7 @@ const NOTARY_REQUIRED_TEMPLATES = ['identity_affidavit', 'late_payment_affidavit
 const DEADLINE_WARNING_DAYS = 5;
 const DEADLINE_URGENT_DAYS = 2;
 
-const AdminLetters: React.FC<Props> = ({ letters, setLetters, clients }) => {
-  // Helper to get client phone
-  const getClientPhone = (clientId: string): string | undefined => {
-    return clients?.find(c => c.id === clientId)?.phone;
-  };
+const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
   const [activeFilter, setActiveFilter] = useState<WorkflowStatus>('all');
   const [selectedLetter, setSelectedLetter] = useState<DisputeLetter | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -689,7 +684,6 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters, clients }) => {
             setSelectedLetter(null);
           }}
           onSendSuccess={handleSendSuccess}
-          clientPhone={getClientPhone(selectedLetter.clientId)}
         />
       )}
 
