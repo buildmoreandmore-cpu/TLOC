@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { DisputeLetter } from '../types';
 import { DISPUTE_TEMPLATES } from '../constants';
+import { getDaysUntilDeadline, formatCost, trackMailingStatus } from '../mailService';
+import SendMailModal from '../components/SendMailModal';
 import {
   FileCheck,
   Mail,
@@ -15,7 +17,12 @@ import {
   Copy,
   X,
   ChevronRight,
-  Filter
+  Filter,
+  Truck,
+  Package,
+  AlertTriangle,
+  ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Props {
@@ -23,7 +30,7 @@ interface Props {
   setLetters?: React.Dispatch<React.SetStateAction<DisputeLetter[]>>;
 }
 
-type WorkflowStatus = 'needs_notary' | 'ready_to_mail' | 'mailed' | 'awaiting_response' | 'response_received' | 'completed' | 'all';
+type WorkflowStatus = 'needs_notary' | 'ready_to_mail' | 'processing' | 'in_transit' | 'delivered' | 'awaiting_response' | 'response_received' | 'completed' | 'all';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ReactNode; description: string }> = {
   needs_notary: {
@@ -39,6 +46,27 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: str
     bgColor: 'bg-blue-50 border-blue-200',
     icon: <Mail className="h-5 w-5" />,
     description: 'Letters ready to be sent via certified mail'
+  },
+  processing: {
+    label: 'Processing',
+    color: 'text-indigo-700',
+    bgColor: 'bg-indigo-50 border-indigo-200',
+    icon: <Package className="h-5 w-5" />,
+    description: 'Letter submitted to mail provider'
+  },
+  in_transit: {
+    label: 'In Transit',
+    color: 'text-cyan-700',
+    bgColor: 'bg-cyan-50 border-cyan-200',
+    icon: <Truck className="h-5 w-5" />,
+    description: 'Letter is being delivered by USPS'
+  },
+  delivered: {
+    label: 'Delivered',
+    color: 'text-teal-700',
+    bgColor: 'bg-teal-50 border-teal-200',
+    icon: <CheckCircle className="h-5 w-5" />,
+    description: 'Letter delivered, awaiting response'
   },
   mailed: {
     label: 'Mailed',
@@ -87,10 +115,16 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: str
 // Templates that require notarization
 const NOTARY_REQUIRED_TEMPLATES = ['identity_affidavit', 'late_payment_affidavit'];
 
+// Deadline warning thresholds
+const DEADLINE_WARNING_DAYS = 5;
+const DEADLINE_URGENT_DAYS = 2;
+
 const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
   const [activeFilter, setActiveFilter] = useState<WorkflowStatus>('all');
   const [selectedLetter, setSelectedLetter] = useState<DisputeLetter | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [refreshingTracking, setRefreshingTracking] = useState<string | null>(null);
 
   // Determine effective status based on template type
   const getEffectiveStatus = (letter: DisputeLetter): string => {
@@ -106,6 +140,10 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
     if (letter.status === 'sent') {
       return 'awaiting_response';
     }
+    // Keep delivered as awaiting_response for counting purposes
+    if (letter.status === 'delivered') {
+      return 'awaiting_response';
+    }
     return letter.status;
   };
 
@@ -114,7 +152,8 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
     const counts: Record<string, number> = {
       needs_notary: 0,
       ready_to_mail: 0,
-      mailed: 0,
+      processing: 0,
+      in_transit: 0,
       awaiting_response: 0,
       response_received: 0,
       completed: 0,
@@ -133,7 +172,15 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
   // Filter letters
   const filteredLetters = useMemo(() => {
     if (activeFilter === 'all') return letters;
-    return letters.filter(letter => getEffectiveStatus(letter) === activeFilter);
+    return letters.filter(letter => {
+      const effectiveStatus = getEffectiveStatus(letter);
+      // Include processing and in_transit when filtering by awaiting_response
+      if (activeFilter === 'awaiting_response') {
+        return ['awaiting_response', 'delivered', 'processing', 'in_transit'].includes(effectiveStatus) ||
+               ['awaiting_response', 'delivered', 'processing', 'in_transit'].includes(letter.status);
+      }
+      return effectiveStatus === activeFilter || letter.status === activeFilter;
+    });
   }, [letters, activeFilter]);
 
   // Get template name
@@ -154,6 +201,63 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
     setSelectedLetter(null);
   };
 
+  // Handle send success from SendMailModal
+  const handleSendSuccess = (letterId: string, mailData: Partial<DisputeLetter>) => {
+    if (!setLetters) return;
+    setLetters(prev => prev.map(letter =>
+      letter.id === letterId
+        ? { ...letter, ...mailData }
+        : letter
+    ));
+    setShowSendModal(false);
+  };
+
+  // Refresh tracking status
+  const refreshTracking = async (letter: DisputeLetter) => {
+    if (!letter.mailingId || !letter.mailProvider || !setLetters) return;
+
+    setRefreshingTracking(letter.id);
+    try {
+      const trackingResult = await trackMailingStatus(letter.mailingId, letter.mailProvider);
+
+      setLetters(prev => prev.map(l =>
+        l.id === letter.id
+          ? {
+              ...l,
+              status: trackingResult.status as DisputeLetter['status'],
+              providerStatus: trackingResult.status,
+              actualDelivery: trackingResult.deliveryDate,
+            }
+          : l
+      ));
+    } catch (error) {
+      console.error('Failed to refresh tracking:', error);
+    } finally {
+      setRefreshingTracking(null);
+    }
+  };
+
+  // Get deadline info
+  const getDeadlineInfo = (letter: DisputeLetter) => {
+    if (!letter.deadlineDate) return null;
+
+    const daysLeft = getDaysUntilDeadline(letter.deadlineDate);
+    const isUrgent = daysLeft <= DEADLINE_URGENT_DAYS;
+    const isWarning = daysLeft <= DEADLINE_WARNING_DAYS;
+    const isPastDue = daysLeft < 0;
+
+    return {
+      daysLeft,
+      isUrgent,
+      isWarning,
+      isPastDue,
+      formattedDate: new Date(letter.deadlineDate).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+    };
+  };
+
   // Quick actions based on current status
   const getQuickActions = (letter: DisputeLetter) => {
     const effectiveStatus = getEffectiveStatus(letter);
@@ -165,12 +269,30 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
         ];
       case 'ready_to_mail':
         return [
-          { label: 'Mark as Mailed', action: () => setSelectedLetter(letter) && setShowUpdateModal(true), primary: true },
+          {
+            label: 'Send Letter',
+            action: () => {
+              setSelectedLetter(letter);
+              setShowSendModal(true);
+            },
+            primary: true
+          },
         ];
+      case 'processing':
+      case 'in_transit':
+        return [
+          {
+            label: 'Refresh Status',
+            action: () => refreshTracking(letter),
+            primary: false,
+            loading: refreshingTracking === letter.id
+          },
+        ];
+      case 'delivered':
       case 'mailed':
       case 'awaiting_response':
         return [
-          { label: 'Log Response', action: () => setSelectedLetter(letter) && setShowUpdateModal(true), primary: true },
+          { label: 'Log Response', action: () => { setSelectedLetter(letter); setShowUpdateModal(true); }, primary: true },
         ];
       case 'response_received':
         return [
@@ -180,6 +302,83 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
       default:
         return [];
     }
+  };
+
+  // Render tracking badge
+  const renderTrackingBadge = (letter: DisputeLetter) => {
+    const status = letter.status;
+    const deadlineInfo = getDeadlineInfo(letter);
+
+    if (status === 'processing') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+          <Package className="h-3 w-3" />
+          Processing
+        </span>
+      );
+    }
+
+    if (status === 'in_transit') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-medium animate-pulse">
+          <Truck className="h-3 w-3" />
+          In Transit
+        </span>
+      );
+    }
+
+    if (status === 'delivered') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
+          <CheckCircle className="h-3 w-3" />
+          Delivered
+        </span>
+      );
+    }
+
+    return null;
+  };
+
+  // Render deadline countdown
+  const renderDeadlineCountdown = (letter: DisputeLetter) => {
+    const deadlineInfo = getDeadlineInfo(letter);
+    if (!deadlineInfo) return null;
+
+    const { daysLeft, isUrgent, isWarning, isPastDue, formattedDate } = deadlineInfo;
+
+    if (isPastDue) {
+      return (
+        <div className="flex items-center gap-1 text-red-600">
+          <AlertTriangle className="h-4 w-4" />
+          <span className="text-xs font-bold">Past Due by {Math.abs(daysLeft)} days</span>
+        </div>
+      );
+    }
+
+    if (isUrgent) {
+      return (
+        <div className="flex items-center gap-1 text-red-600 animate-pulse">
+          <AlertTriangle className="h-4 w-4" />
+          <span className="text-xs font-bold">{daysLeft} days left!</span>
+        </div>
+      );
+    }
+
+    if (isWarning) {
+      return (
+        <div className="flex items-center gap-1 text-amber-600">
+          <Clock className="h-4 w-4" />
+          <span className="text-xs font-medium">{daysLeft} days until {formattedDate}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-1 text-slate-500">
+        <Clock className="h-4 w-4" />
+        <span className="text-xs">{daysLeft} days until deadline</span>
+      </div>
+    );
   };
 
   return (
@@ -192,8 +391,10 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
       </div>
 
       {/* Status Pipeline */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-        {Object.entries(STATUS_CONFIG).filter(([key]) => key !== 'draft' && key !== 'sent').map(([key, config]) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+        {Object.entries(STATUS_CONFIG).filter(([key]) =>
+          ['needs_notary', 'ready_to_mail', 'processing', 'in_transit', 'awaiting_response', 'response_received', 'completed'].includes(key)
+        ).map(([key, config]) => (
           <button
             key={key}
             onClick={() => setActiveFilter(key as WorkflowStatus)}
@@ -236,13 +437,16 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
       <div className="space-y-4">
         {filteredLetters.map((letter) => {
           const effectiveStatus = getEffectiveStatus(letter);
-          const config = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.draft;
+          const config = STATUS_CONFIG[letter.status] || STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.draft;
           const actions = getQuickActions(letter);
+          const deadlineInfo = getDeadlineInfo(letter);
 
           return (
             <div
               key={letter.id}
-              className={`bg-white rounded-xl border-2 overflow-hidden ${config.bgColor}`}
+              className={`bg-white rounded-xl border-2 overflow-hidden ${
+                deadlineInfo?.isUrgent ? 'border-red-300' : deadlineInfo?.isWarning ? 'border-amber-300' : config.bgColor
+              }`}
             >
               <div className="p-5">
                 <div className="flex items-start justify-between mb-4">
@@ -256,9 +460,12 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${config.bgColor} ${config.color}`}>
-                      {config.label}
-                    </span>
+                    <div className="flex items-center gap-2 justify-end">
+                      {renderTrackingBadge(letter)}
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${config.bgColor} ${config.color}`}>
+                        {config.label}
+                      </span>
+                    </div>
                     <p className="text-xs text-slate-400 mt-1">Created: {letter.createdAt}</p>
                   </div>
                 </div>
@@ -272,33 +479,68 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                 </div>
 
                 {/* Additional Info */}
-                {(letter.trackingNumber || letter.dateMailed || letter.bureau) && (
-                  <div className="flex flex-wrap gap-4 mb-4 text-sm">
-                    {letter.bureau && (
-                      <div>
-                        <span className="text-slate-400">Bureau:</span>
-                        <span className="ml-1 font-medium text-slate-700">{letter.bureau}</span>
-                      </div>
-                    )}
-                    {letter.dateMailed && (
-                      <div>
-                        <span className="text-slate-400">Mailed:</span>
-                        <span className="ml-1 font-medium text-slate-700">{letter.dateMailed}</span>
-                      </div>
-                    )}
-                    {letter.trackingNumber && (
-                      <div>
-                        <span className="text-slate-400">Tracking:</span>
-                        <span className="ml-1 font-mono font-medium text-blue-600">{letter.trackingNumber}</span>
-                      </div>
-                    )}
+                <div className="flex flex-wrap gap-4 mb-4 text-sm">
+                  {letter.bureau && (
+                    <div>
+                      <span className="text-slate-400">Bureau:</span>
+                      <span className="ml-1 font-medium text-slate-700">{letter.bureau}</span>
+                    </div>
+                  )}
+                  {letter.dateMailed && (
+                    <div>
+                      <span className="text-slate-400">Mailed:</span>
+                      <span className="ml-1 font-medium text-slate-700">{letter.dateMailed}</span>
+                    </div>
+                  )}
+                  {letter.trackingNumber && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400">Tracking:</span>
+                      <a
+                        href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${letter.trackingNumber.replace(/\s/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      >
+                        {letter.trackingNumber}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
+                  {letter.mailCost && (
+                    <div>
+                      <span className="text-slate-400">Cost:</span>
+                      <span className="ml-1 font-medium text-slate-700">{formatCost(letter.mailCost)}</span>
+                    </div>
+                  )}
+                  {letter.estimatedDelivery && !letter.actualDelivery && (
+                    <div>
+                      <span className="text-slate-400">Est. Delivery:</span>
+                      <span className="ml-1 font-medium text-slate-700">
+                        {new Date(letter.estimatedDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
+                  {letter.actualDelivery && (
+                    <div>
+                      <span className="text-slate-400">Delivered:</span>
+                      <span className="ml-1 font-medium text-green-600">
+                        {new Date(letter.actualDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Deadline countdown */}
+                {deadlineInfo && (
+                  <div className="mb-4">
+                    {renderDeadlineCountdown(letter)}
                   </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setSelectedLetter(letter)}
+                    onClick={() => { setSelectedLetter(letter); setShowSendModal(false); setShowUpdateModal(false); }}
                     className="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />
@@ -332,14 +574,18 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                     <button
                       key={idx}
                       onClick={action.action}
+                      disabled={'loading' in action && action.loading}
                       className={`px-4 py-2 text-sm font-bold rounded-lg transition flex items-center gap-2 ${
                         action.primary
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400'
                           : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
+                      {'loading' in action && action.loading ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : null}
                       {action.label}
-                      <ChevronRight className="h-4 w-4" />
+                      {!('loading' in action && action.loading) && <ChevronRight className="h-4 w-4" />}
                     </button>
                   ))}
                 </div>
@@ -364,7 +610,7 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
       </div>
 
       {/* View Letter Modal */}
-      {selectedLetter && !showUpdateModal && (
+      {selectedLetter && !showUpdateModal && !showSendModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b">
@@ -408,15 +654,37 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                   Download
                 </button>
               </div>
-              <button
-                onClick={() => setShowUpdateModal(true)}
-                className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
-              >
-                Update Status
-              </button>
+              {getEffectiveStatus(selectedLetter) === 'ready_to_mail' ? (
+                <button
+                  onClick={() => setShowSendModal(true)}
+                  className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  Send Letter
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowUpdateModal(true)}
+                  className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+                >
+                  Update Status
+                </button>
+              )}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Send Mail Modal */}
+      {selectedLetter && showSendModal && (
+        <SendMailModal
+          letter={selectedLetter}
+          onClose={() => {
+            setShowSendModal(false);
+            setSelectedLetter(null);
+          }}
+          onSendSuccess={handleSendSuccess}
+        />
       )}
 
       {/* Update Status Modal */}
@@ -446,7 +714,7 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                       <select
                         id="bureau-select"
                         className="w-full px-4 py-2 border border-slate-300 rounded-lg"
-                        defaultValue=""
+                        defaultValue={selectedLetter.bureau || ""}
                       >
                         <option value="">Select bureau...</option>
                         <option value="Equifax">Equifax</option>
@@ -482,7 +750,11 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                   </>
                 )}
 
-                {(getEffectiveStatus(selectedLetter) === 'awaiting_response' || getEffectiveStatus(selectedLetter) === 'mailed') && (
+                {(getEffectiveStatus(selectedLetter) === 'awaiting_response' ||
+                  getEffectiveStatus(selectedLetter) === 'mailed' ||
+                  selectedLetter.status === 'delivered' ||
+                  selectedLetter.status === 'processing' ||
+                  selectedLetter.status === 'in_transit') && (
                   <>
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Response Outcome</label>
@@ -492,7 +764,7 @@ const AdminLetters: React.FC<Props> = ({ letters, setLetters }) => {
                         defaultValue=""
                       >
                         <option value="">Select outcome...</option>
-                        <option value="deleted">Item Deleted ✓</option>
+                        <option value="deleted">Item Deleted</option>
                         <option value="updated">Information Updated</option>
                         <option value="verified">Verified (No Change)</option>
                         <option value="pending">No Response Yet</option>

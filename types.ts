@@ -26,13 +26,21 @@ export interface DisputeLetter {
   templateId: string;
   content: string;
   createdAt: string;
-  status: 'needs_notary' | 'ready_to_mail' | 'mailed' | 'awaiting_response' | 'response_received' | 'completed' | 'draft' | 'sent' | 'responded';
+  status: 'needs_notary' | 'ready_to_mail' | 'processing' | 'in_transit' | 'delivered' | 'mailed' | 'awaiting_response' | 'response_received' | 'completed' | 'draft' | 'sent' | 'responded';
   dateMailed?: string;
   trackingNumber?: string;
   bureau?: string;
   responseDate?: string;
   responseOutcome?: 'deleted' | 'verified' | 'updated' | 'pending';
   notes?: string;
+  // Mail provider fields
+  mailProvider?: 'lob' | 'click2mail' | 'postgrid' | 'letterstream' | 'manual';
+  mailingId?: string;          // Provider's mailing ID
+  mailCost?: number;           // Cost in cents
+  estimatedDelivery?: string;  // Expected delivery date (ISO string)
+  actualDelivery?: string;     // Actual delivery date (ISO string)
+  providerStatus?: string;     // Raw status from provider
+  deadlineDate?: string;       // 30-day response deadline (ISO string)
 }
 
 export interface Template {

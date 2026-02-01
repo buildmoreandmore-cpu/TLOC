@@ -961,3 +961,212 @@ export const INITIAL_LETTERS: DisputeLetter[] = [
     status: 'sent'
   }
 ];
+
+// Template document requirements for mail service
+export interface TemplateRequirement {
+  id: string;
+  label: string;
+  description: string;
+  required: boolean;
+}
+
+export interface TemplateRequirements {
+  templateId: string;
+  templateName: string;
+  requirements: TemplateRequirement[];
+  requiresNotarization: boolean;
+  canSendViaCloudMail: boolean;
+  notes?: string;
+}
+
+// Document requirements mapping by template type
+export const TEMPLATE_REQUIREMENTS: Record<string, TemplateRequirements> = {
+  // Identity Theft templates
+  bureau_dispute_identity_theft: {
+    templateId: 'bureau_dispute_identity_theft',
+    templateName: 'Identity Theft Dispute',
+    requirements: [
+      { id: 'ftc_affidavit', label: 'FTC Identity Theft Affidavit', description: 'File at IdentityTheft.gov', required: true },
+      { id: 'police_report', label: 'Police Report', description: 'Local police department report', required: true },
+      { id: 'gov_id', label: 'Government-issued ID', description: 'Driver\'s license or passport copy', required: true },
+      { id: 'proof_of_address', label: 'Proof of Address', description: 'Utility bill or bank statement', required: false },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+    notes: 'Bureau must block within 4 business days with proper documentation',
+  },
+
+  // Affidavit templates (require notarization)
+  identity_affidavit: {
+    templateId: 'identity_affidavit',
+    templateName: 'Affidavit of Identity & Correction Request',
+    requirements: [
+      { id: 'gov_id', label: 'Government-issued ID', description: 'Driver\'s license or passport copy', required: true },
+      { id: 'proof_of_address', label: 'Proof of Address', description: 'Utility bill or bank statement', required: true },
+      { id: 'ssn_card', label: 'Social Security Card', description: 'Copy of SSN card (optional)', required: false },
+    ],
+    requiresNotarization: true,
+    canSendViaCloudMail: false,
+    notes: 'Must be notarized before mailing - download and mail manually',
+  },
+
+  late_payment_affidavit: {
+    templateId: 'late_payment_affidavit',
+    templateName: 'Sworn Affidavit - Unverifiable Late Payment',
+    requirements: [
+      { id: 'call_notes', label: 'Phone Call Notes', description: 'Notes from creditor call with date, rep name', required: true },
+      { id: 'credit_report', label: 'Credit Report', description: 'Report showing inconsistent reporting', required: true },
+    ],
+    requiresNotarization: true,
+    canSendViaCloudMail: false,
+    notes: 'Must be notarized before mailing - download and mail manually',
+  },
+
+  // Bureau dispute templates
+  bureau_dispute_not_mine: {
+    templateId: 'bureau_dispute_not_mine',
+    templateName: 'Bureau Dispute - Account Not Mine',
+    requirements: [
+      { id: 'gov_id', label: 'Government-issued ID', description: 'Driver\'s license or passport copy', required: true },
+      { id: 'proof_of_address', label: 'Proof of Address', description: 'Utility bill or bank statement', required: true },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  bureau_dispute_inaccurate: {
+    templateId: 'bureau_dispute_inaccurate',
+    templateName: 'Bureau Dispute - Inaccurate Information',
+    requirements: [
+      { id: 'gov_id', label: 'Government-issued ID', description: 'Driver\'s license or passport copy', required: true },
+      { id: 'supporting_docs', label: 'Supporting Documentation', description: 'Evidence proving the inaccuracy', required: false },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  // Re-insertion template
+  reinsertion_violation: {
+    templateId: 'reinsertion_violation',
+    templateName: 'Re-Insertion Violation Letter',
+    requirements: [
+      { id: 'gov_id', label: 'Government-issued ID', description: 'Driver\'s license or passport copy', required: true },
+      { id: 'proof_of_address', label: 'Proof of Address', description: 'Utility bill or bank statement', required: true },
+      { id: 'original_deletion', label: 'Original Deletion Confirmation', description: 'Letter confirming item was deleted', required: true },
+      { id: 'current_report', label: 'Current Credit Report', description: 'Report showing re-insertion', required: true },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+    notes: 'Potential $1,000 statutory damages',
+  },
+
+  // Method of verification
+  method_of_verification: {
+    templateId: 'method_of_verification',
+    templateName: 'Method of Verification Demand',
+    requirements: [
+      { id: 'original_dispute', label: 'Original Dispute Letter', description: 'Copy of your original dispute', required: true },
+      { id: 'dispute_results', label: 'Dispute Results', description: 'Bureau\'s verification response', required: true },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  // Debt validation
+  debt_validation: {
+    templateId: 'debt_validation',
+    templateName: 'Debt Validation Letter',
+    requirements: [],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+    notes: 'Send within 30 days of first collector contact',
+  },
+
+  // Goodwill and negotiation
+  goodwill_letter: {
+    templateId: 'goodwill_letter',
+    templateName: 'Goodwill Deletion Request',
+    requirements: [],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+    notes: 'Courtesy request - works best with original creditors',
+  },
+
+  pay_for_delete: {
+    templateId: 'pay_for_delete',
+    templateName: 'Pay-for-Delete Negotiation',
+    requirements: [],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+    notes: 'Get agreement in writing before paying',
+  },
+
+  // Inquiry disputes
+  unauthorized_inquiry_bureau: {
+    templateId: 'unauthorized_inquiry_bureau',
+    templateName: 'Unauthorized Inquiry Dispute (Bureau)',
+    requirements: [
+      { id: 'gov_id', label: 'Government-issued ID', description: 'Driver\'s license or passport copy', required: true },
+      { id: 'credit_report', label: 'Credit Report', description: 'Report showing the inquiry', required: true },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  unauthorized_inquiry_creditor: {
+    templateId: 'unauthorized_inquiry_creditor',
+    templateName: 'Unauthorized Inquiry Demand (Creditor)',
+    requirements: [],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  // Late payment dispute
+  late_payment_dispute: {
+    templateId: 'late_payment_dispute',
+    templateName: 'Late Payment Dispute',
+    requirements: [
+      { id: 'supporting_docs', label: 'Supporting Documentation', description: 'Payment records or statements', required: false },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  // Direct creditor dispute
+  direct_creditor_dispute: {
+    templateId: 'direct_creditor_dispute',
+    templateName: 'Direct Creditor/Furnisher Dispute',
+    requirements: [
+      { id: 'supporting_docs', label: 'Supporting Documentation', description: 'Evidence of inaccuracy', required: false },
+      { id: 'credit_report', label: 'Credit Report', description: 'Report showing inaccurate info', required: true },
+    ],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+
+  // Opt-out letter
+  opt_out_letter: {
+    templateId: 'opt_out_letter',
+    templateName: 'Opt-Out Letter',
+    requirements: [],
+    requiresNotarization: false,
+    canSendViaCloudMail: true,
+  },
+};
+
+// Helper to get requirements for a template
+export function getTemplateRequirements(templateId: string): TemplateRequirements | null {
+  return TEMPLATE_REQUIREMENTS[templateId] || null;
+}
+
+// Helper to check if template requires notarization
+export function templateRequiresNotarization(templateId: string): boolean {
+  const requirements = TEMPLATE_REQUIREMENTS[templateId];
+  return requirements?.requiresNotarization ?? false;
+}
+
+// Helper to check if template can be sent via cloud mail
+export function canSendViaCloudMail(templateId: string): boolean {
+  const requirements = TEMPLATE_REQUIREMENTS[templateId];
+  return requirements?.canSendViaCloudMail ?? true;
+}
