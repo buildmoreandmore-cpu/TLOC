@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { X } from 'lucide-react';
 import { Client } from '../types';
 
 interface Props {
@@ -8,15 +9,103 @@ interface Props {
   setClients: React.Dispatch<React.SetStateAction<Client[]>>;
 }
 
-const AdminClients: React.FC<Props> = ({ clients }) => {
+const AdminClients: React.FC<Props> = ({ clients, setClients }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [newClient, setNewClient] = useState({ name: '', email: '', score: '' });
+
+  const handleAddClient = (e: React.FormEvent) => {
+    e.preventDefault();
+    const client: Client = {
+      id: `client-${Date.now()}`,
+      name: newClient.name,
+      email: newClient.email,
+      token: Math.random().toString(36).substring(2, 15),
+      score: parseInt(newClient.score) || 0,
+      status: 'onboarding',
+      joinedDate: new Date().toISOString().split('T')[0],
+      negativeItems: [],
+    };
+    setClients([...clients, client]);
+    setNewClient({ name: '', email: '', score: '' });
+    setShowModal(false);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-slate-800">Client Management</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700"
+        >
           + Add New Client
         </button>
       </div>
+
+      {/* Add Client Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Add New Client</h2>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddClient} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                  placeholder="John Smith"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={newClient.email}
+                  onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                  placeholder="john@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Current Credit Score</label>
+                <input
+                  type="number"
+                  value={newClient.score}
+                  onChange={(e) => setNewClient({ ...newClient, score: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                  placeholder="580"
+                  min="300"
+                  max="850"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                >
+                  Add Client
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <table className="w-full text-left">
