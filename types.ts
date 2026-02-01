@@ -32,8 +32,15 @@ export interface DisputeLetter {
 export interface Template {
   id: string;
   name: string;
+  category: string;
   description: string;
+  legalBasis: string;
+  useCase: string;
+  mailMethod: 'certified_required' | 'certified_recommended' | 'regular_ok';
+  successRate: 'High' | 'Medium' | 'Low';
   content: string;
+  attachments?: string[];
+  potentialDamages?: number;
 }
 
 export interface AppState {
