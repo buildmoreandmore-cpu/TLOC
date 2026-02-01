@@ -3,9 +3,11 @@ export interface Client {
   id: string;
   name: string;
   email: string;
+  phone: string;
   token: string;
   score: number;
   status: 'active' | 'onboarding' | 'completed';
+  paymentStatus: 'paid' | 'unpaid';
   joinedDate: string;
   negativeItems: NegativeItem[];
 }
