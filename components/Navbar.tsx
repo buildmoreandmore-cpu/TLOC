@@ -18,7 +18,6 @@ const Navbar: React.FC = () => {
             <div className="hidden lg:flex items-center gap-8">
               <Link to="/" className={isActive('/')}>Home</Link>
               <Link to="/services" className={isActive('/services')}>Services</Link>
-              <Link to="/resources" className={isActive('/resources')}>Resources</Link>
               <Link to="/contact" className={isActive('/contact')}>Contact</Link>
             </div>
           </div>

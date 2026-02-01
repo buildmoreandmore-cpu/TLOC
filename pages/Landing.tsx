@@ -380,17 +380,53 @@ const Landing: React.FC = () => {
             </div>
           )}
 
-          {/* Don't have a report? */}
-          <div className="mt-8 text-center">
-            <p className="text-slate-400 mb-2">Don't have your credit report?</p>
-            <a
-              href="https://www.annualcreditreport.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 font-medium"
-            >
-              Get your free report at AnnualCreditReport.com →
-            </a>
+          {/* Get Your Credit Report - Two Options */}
+          <div className="mt-10">
+            <p className="text-slate-400 text-center mb-4 text-sm uppercase tracking-wide font-medium">Don't have your credit report? Get it here:</p>
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Option 1: AnnualCreditReport.com - Free */}
+              <a
+                href="https://www.annualcreditreport.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-5 hover:bg-white/20 transition group"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded">FREE</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-white transition" />
+                </div>
+                <h4 className="text-white font-bold text-lg mb-1">AnnualCreditReport.com</h4>
+                <p className="text-slate-300 text-sm mb-3">Official site - free report once per year from each bureau</p>
+                <ul className="text-xs text-slate-400 space-y-1">
+                  <li>✓ Equifax, Experian, TransUnion</li>
+                  <li>✓ Government authorized</li>
+                  <li>✓ No credit card required</li>
+                </ul>
+              </a>
+
+              {/* Option 2: IdentityIQ - $1 Trial */}
+              <a
+                href="https://www.identityiq.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-5 hover:bg-white/20 transition group"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-bold bg-blue-500 text-white px-2 py-1 rounded">$1 TRIAL</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-white transition" />
+                </div>
+                <h4 className="text-white font-bold text-lg mb-1">IdentityIQ</h4>
+                <p className="text-slate-300 text-sm mb-3">All 3 bureaus + scores for $1 (7-day trial)</p>
+                <ul className="text-xs text-slate-400 space-y-1">
+                  <li>✓ All 3 reports + FICO scores</li>
+                  <li>✓ Daily credit monitoring</li>
+                  <li>✓ Instant access</li>
+                </ul>
+              </a>
+            </div>
+            <p className="text-center text-slate-500 text-xs mt-4">
+              Also available: Credit Karma (free Equifax & TransUnion) • Experian.com (free Experian)
+            </p>
           </div>
         </div>
       </section>
