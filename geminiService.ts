@@ -1,15 +1,25 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Initialize the Google GenAI client with the API key from environment variables.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize the Google GenAI client lazily to avoid crashes if API key is not set
+let ai: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!ai && process.env.API_KEY) {
+    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  }
+  if (!ai) {
+    throw new Error("Gemini API key is not configured. Please set GEMINI_API_KEY environment variable.");
+  }
+  return ai;
+};
 
 export const analyzeCreditReport = async (text: string) => {
   const prompt = `Analyze this credit report text and identify negative items that can be disputed. 
   Extract the creditor name, the type of negative item (e.g., late payment, collection, bankruptcy), the approximate balance, and current status.
   Also, extract or estimate the date it was first reported.`;
 
-  const response = await ai.models.generateContent({
+  const response = await getAI().models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt }, { text: text }] },
     config: {
@@ -47,7 +57,7 @@ export const generateDisputeLetter = async (clientName: string, negativeItems: a
   
   Make it authoritative, legally sound, and formatted ready to print. Include placeholders like [TODAY'S DATE] and [CLIENT ADDRESS].`;
 
-  const response = await ai.models.generateContent({
+  const response = await getAI().models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
@@ -63,7 +73,7 @@ export const generateDebtSnowballPlan = async (debts: any[]) => {
   The debt snowball method involves paying off the smallest debts first to build momentum.
   Provide a month-by-month plan for the first 6 months. Include which debt to focus on and a motivational tip for each month.`;
 
-  const response = await ai.models.generateContent({
+  const response = await getAI().models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
