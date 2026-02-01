@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
-import { INITIAL_CLIENTS, INITIAL_LETTERS, DISPUTE_TEMPLATES } from './constants';
+import { DISPUTE_TEMPLATES } from './constants';
 import { Client, DisputeLetter, Template } from './types';
 
 // Pages
@@ -39,12 +39,12 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children, isAdmin }) => {
 const App: React.FC = () => {
   const [clients, setClients] = useState<Client[]>(() => {
     const saved = localStorage.getItem('tlc_clients');
-    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [letters, setLetters] = useState<DisputeLetter[]>(() => {
     const saved = localStorage.getItem('tlc_letters');
-    return saved ? JSON.parse(saved) : INITIAL_LETTERS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [isAdmin, setIsAdmin] = useState(() => {
