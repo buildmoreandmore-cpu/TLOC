@@ -75,22 +75,17 @@ const PROVIDER_PRICING: Record<MailProvider, { certified: number; regular: numbe
   manual: { certified: 0, regular: 0 },
 };
 
-// Get API key from environment
+// Get API key from environment (Vite uses import.meta.env)
 const getApiKey = (provider: MailProvider): string => {
-  if (typeof window !== 'undefined') {
-    // Client-side: check for stored keys or use test mode
-    return '';
-  }
-
   switch (provider) {
     case 'lob':
-      return process.env.LOB_API_KEY || '';
+      return import.meta.env.VITE_LOB_API_KEY || '';
     case 'click2mail':
-      return process.env.CLICK2MAIL_API_KEY || '';
+      return import.meta.env.VITE_CLICK2MAIL_API_KEY || '';
     case 'letterstream':
-      return process.env.LETTERSTREAM_API_KEY || '';
+      return import.meta.env.VITE_LETTERSTREAM_API_KEY || '';
     case 'postgrid':
-      return process.env.POSTGRID_API_KEY || '';
+      return import.meta.env.VITE_POSTGRID_API_KEY || '';
     default:
       return '';
   }
