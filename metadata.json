@@ -1,0 +1,7 @@
+{
+  "name": "Three Level of Credit",
+  "description": "Professional credit repair management tool with AI-powered analysis and dispute letter generation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
