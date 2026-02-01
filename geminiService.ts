@@ -5,22 +5,26 @@ import { GoogleGenAI, Type } from "@google/genai";
 let ai: GoogleGenAI | null = null;
 
 const getAI = () => {
-  if (!ai && process.env.API_KEY) {
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  if (!ai) {
+    // Vite exposes env vars via import.meta.env
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (apiKey) {
+      ai = new GoogleGenAI({ apiKey });
+    }
   }
   if (!ai) {
-    throw new Error("Gemini API key is not configured. Please set GEMINI_API_KEY environment variable.");
+    throw new Error("Gemini API key is not configured. Please set VITE_GEMINI_API_KEY environment variable.");
   }
   return ai;
 };
 
 export const analyzeCreditReport = async (text: string) => {
-  const prompt = `Analyze this credit report text and identify negative items that can be disputed. 
+  const prompt = `Analyze this credit report text and identify negative items that can be disputed.
   Extract the creditor name, the type of negative item (e.g., late payment, collection, bankruptcy), the approximate balance, and current status.
   Also, extract or estimate the date it was first reported.`;
 
   const response = await getAI().models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.0-flash',
     contents: { parts: [{ text: prompt }, { text: text }] },
     config: {
       systemInstruction: "You are a senior credit repair specialist with 20 years of experience. You find errors and leverage consumer laws (FCRA) to identify disputable items. Always return a valid JSON array of objects.",
@@ -51,14 +55,14 @@ export const analyzeCreditReport = async (text: string) => {
 export const generateDisputeLetter = async (clientName: string, negativeItems: any[], templateContent: string) => {
   const prompt = `Using the following template as a base:
   "${templateContent}"
-  
+
   Generate a professional dispute letter for ${clientName} targeting these specific items:
   ${JSON.stringify(negativeItems)}
-  
+
   Make it authoritative, legally sound, and formatted ready to print. Include placeholders like [TODAY'S DATE] and [CLIENT ADDRESS].`;
 
   const response = await getAI().models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.0-flash',
     contents: prompt,
     config: {
       systemInstruction: "You are an expert consumer law attorney. You write letters that get results from credit bureaus."
@@ -69,12 +73,12 @@ export const generateDisputeLetter = async (clientName: string, negativeItems: a
 };
 
 export const generateDebtSnowballPlan = async (debts: any[]) => {
-  const prompt = `Based on the following list of debts: ${JSON.stringify(debts)}, generate a "Debt Snowball" payoff plan. 
+  const prompt = `Based on the following list of debts: ${JSON.stringify(debts)}, generate a "Debt Snowball" payoff plan.
   The debt snowball method involves paying off the smallest debts first to build momentum.
   Provide a month-by-month plan for the first 6 months. Include which debt to focus on and a motivational tip for each month.`;
 
   const response = await getAI().models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.0-flash',
     contents: prompt,
     config: {
       systemInstruction: "You are a world-class financial advisor specializing in debt elimination. You help people find freedom through intentional budgeting and the snowball method. Return a clean JSON array of plan steps.",
