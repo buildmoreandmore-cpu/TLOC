@@ -10,29 +10,26 @@ const Footer: React.FC = () => {
     {
       title: 'Services',
       links: [
-        { label: 'Bureau Disputes', path: '/services#bureau' },
-        { label: 'Identity Theft Removal', path: '/services#identity' },
-        { label: 'Creditor Disputes', path: '/services#creditor' },
-        { label: 'Late Payment Removal', path: '/services#late' },
-        { label: 'Inquiry Removal', path: '/services#inquiry' },
+        { label: 'Credit Report Disputes', path: '/services' },
+        { label: 'Inquiry Removal', path: '/services' },
+        { label: 'Credit Analysis', path: '/services' },
+        { label: 'Credit Building', path: '/services' },
       ]
     },
     {
       title: 'Company',
       links: [
         { label: 'Home', path: '/' },
-        { label: 'About Us', path: '/services' },
-        { label: 'Our Process', path: '/services' },
+        { label: 'Our Services', path: '/services' },
         { label: 'Contact', path: '/contact' },
         { label: 'Client Portal', path: '/login' },
       ]
     },
     {
-      title: 'Resources',
+      title: 'Get Started',
       links: [
-        { label: 'Free Credit Report', path: '/#analyzer', external: false },
-        { label: 'FCRA Rights', path: '/services' },
-        { label: 'Dispute Process', path: '/services' },
+        { label: 'Free Consultation', path: '/contact' },
+        { label: 'Our Approach', path: '/services' },
         { label: 'FAQs', path: '/contact' },
       ]
     },
@@ -46,15 +43,15 @@ const Footer: React.FC = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">T</div>
-              <span className="text-2xl font-black tracking-tight">Three Level of Credit</span>
+              <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">3</div>
+              <span className="text-2xl font-black tracking-tight">Three Level Credit</span>
             </Link>
             <p className="text-slate-400 leading-relaxed mb-6 max-w-sm">
-              Professional credit repair services using legally-backed dispute letters. We cite the exact federal laws that protect your rights.
+              Professional credit improvement services. Our three-level approach helps you achieve your financial goals.
             </p>
             <div className="flex items-center gap-2 text-sm text-blue-400 font-medium mb-8">
               <Shield className="h-4 w-4" />
-              <span>FCRA Compliant Dispute Letters</span>
+              <span>Results-Driven Credit Solutions</span>
             </div>
 
             {/* Contact Info */}
@@ -63,9 +60,9 @@ const Footer: React.FC = () => {
                 <Phone className="h-4 w-4" />
                 <span>(123) 456-7890</span>
               </a>
-              <a href="mailto:info@threelevelofcredit.com" className="flex items-center gap-3 text-slate-400 hover:text-white transition">
+              <a href="mailto:info@threelevelcredit.com" className="flex items-center gap-3 text-slate-400 hover:text-white transition">
                 <Mail className="h-4 w-4" />
-                <span>info@threelevelofcredit.com</span>
+                <span>info@threelevelcredit.com</span>
               </a>
               <div className="flex items-center gap-3 text-slate-400">
                 <MapPin className="h-4 w-4" />
@@ -102,7 +99,7 @@ const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-slate-500 text-sm">
-              &copy; {currentYear} Three Level of Credit. All rights reserved.
+              &copy; {currentYear} Three Level Credit. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-sm">
               <Link to="/contact" className="text-slate-500 hover:text-white transition">

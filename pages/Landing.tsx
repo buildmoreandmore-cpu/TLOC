@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, AlertTriangle, Search, FileText, Scale, ShieldCheck, ArrowRight, CheckCircle, Upload, Camera, X, Loader2, DollarSign, Clock, Mail } from 'lucide-react';
+import { Shield, TrendingUp, Search, FileText, Scale, ShieldCheck, ArrowRight, CheckCircle, Upload, Camera, X, Loader2, DollarSign, Star, Users } from 'lucide-react';
 
 const Landing: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -49,13 +49,13 @@ const Landing: React.FC = () => {
   const handleSubmitForAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAnalyzing(true);
-    // Simulate analysis delay
     setTimeout(() => {
       setIsAnalyzing(false);
       setShowResults(true);
       setShowContactForm(false);
     }, 2500);
   };
+
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
@@ -63,12 +63,16 @@ const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
             <div className="lg:col-span-6 z-10">
+              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-bold mb-6">
+                <Star className="h-4 w-4" />
+                Trusted by 500+ Clients
+              </div>
               <h1 className="text-5xl md:text-7xl font-black text-black leading-[0.95] tracking-tighter mb-8">
-                Your Credit Score Is a Reflection of Your Credit Report...
-                <span className="text-blue-600"> Let's Fix That.</span>
+                Take Control of Your
+                <span className="text-blue-600"> Credit Future.</span>
               </h1>
               <p className="text-xl text-slate-600 mb-10 max-w-xl leading-relaxed">
-                Professional credit repair services using legally-backed dispute letters. We cite the exact federal laws that protect your rights.
+                Three Level Credit helps you understand, dispute, and improve your credit report through our proven three-level approach.
               </p>
               <div className="flex flex-wrap items-center gap-4">
                 <a href="#analyzer" className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition active:scale-95 shadow-xl shadow-blue-100 flex items-center gap-2">
@@ -81,38 +85,33 @@ const Landing: React.FC = () => {
               </div>
               <p className="mt-4 text-sm text-slate-500 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                Upload your credit report and get a personalized action plan in minutes
+                Get your personalized credit improvement plan today
               </p>
             </div>
             <div className="lg:col-span-6 mt-16 lg:mt-0 relative">
               <div className="relative z-10">
                 <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100">
+                  <h3 className="font-black text-xl mb-6 text-slate-900">The Three Level Approach</h3>
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-blue-500 rounded-xl">
-                        <Shield className="h-6 w-6 text-white" />
-                      </div>
+                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg">1</div>
                       <div>
-                        <h3 className="font-bold text-lg">8 Letter Types</h3>
-                        <p className="text-slate-500">Professional dispute letters for every situation</p>
+                        <h3 className="font-bold text-lg">Analyze</h3>
+                        <p className="text-slate-500">We identify every issue on your report</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-green-500 rounded-xl">
-                        <Scale className="h-6 w-6 text-white" />
-                      </div>
+                      <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-white font-black text-lg">2</div>
                       <div>
-                        <h3 className="font-bold text-lg">Legally Backed</h3>
-                        <p className="text-slate-500">Every letter cites FCRA & federal law</p>
+                        <h3 className="font-bold text-lg">Dispute</h3>
+                        <p className="text-slate-500">Professional letters sent on your behalf</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="p-3 bg-yellow-500 rounded-xl">
-                        <FileText className="h-6 w-6 text-white" />
-                      </div>
+                      <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center text-white font-black text-lg">3</div>
                       <div>
-                        <h3 className="font-bold text-lg">Certified Mail</h3>
-                        <p className="text-slate-500">Proper documentation & tracking</p>
+                        <h3 className="font-bold text-lg">Elevate</h3>
+                        <p className="text-slate-500">Build and maintain better credit</p>
                       </div>
                     </div>
                   </div>
@@ -124,27 +123,27 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Federal Law Banner */}
+      {/* Trust Banner */}
       <section className="py-8 -mt-16 relative z-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4">
-            <div className="p-3 bg-blue-100 rounded-xl flex-shrink-0">
-              <ShieldCheck className="h-7 w-7 text-blue-600" />
+          <div className="bg-slate-900 text-white rounded-2xl p-6 flex items-center justify-center gap-8 flex-wrap">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-6 w-6 text-green-400" />
+              <span className="font-bold">Your Rights Protected</span>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-1">
-                Your rights are protected by federal law
-              </h3>
-              <p className="text-slate-600">
-                The Fair Credit Reporting Act (FCRA) gives you the right to dispute inaccurate information.
-                These letters cite the exact laws that protect you. Credit bureaus must investigate within 30 days or remove the item.
-              </p>
+            <div className="flex items-center gap-2">
+              <FileText className="h-6 w-6 text-blue-400" />
+              <span className="font-bold">Certified Mail Tracking</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-6 w-6 text-purple-400" />
+              <span className="font-bold">Dedicated Support</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Credit Report Analyzer - Lead Generation */}
+      {/* Credit Report Analyzer */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900" id="analyzer">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           <div className="text-center mb-10">
@@ -156,8 +155,7 @@ const Landing: React.FC = () => {
               Upload Your Credit Report
             </h2>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-              We'll analyze it and tell you <strong className="text-white">exactly</strong> which letters to send,
-              in what order, to fix every negative item.
+              Get a personalized action plan showing exactly what's hurting your score and how to fix it.
             </p>
           </div>
 
@@ -165,7 +163,6 @@ const Landing: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-2xl p-8">
               {!showContactForm ? (
                 <>
-                  {/* Dropzone */}
                   <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -196,7 +193,6 @@ const Landing: React.FC = () => {
                     </label>
                   </div>
 
-                  {/* File List */}
                   {files.length > 0 && (
                     <div className="mt-6 space-y-2">
                       <p className="text-sm font-medium text-slate-700">Files to analyze:</p>
@@ -221,7 +217,6 @@ const Landing: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Analyze Button */}
                   <button
                     onClick={handleAnalyze}
                     disabled={files.length === 0}
@@ -234,11 +229,10 @@ const Landing: React.FC = () => {
                     Analyze My Credit Report
                   </button>
 
-                  {/* What We Detect */}
                   <div className="mt-6 p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm font-medium text-slate-700 mb-3">What we detect:</p>
+                    <p className="text-sm font-medium text-slate-700 mb-3">We help with:</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-slate-600">
-                      {['Collections', 'Charge-offs', 'Late Payments', 'Hard Inquiries', 'Public Records', 'Judgments'].map((item) => (
+                      {['Collections', 'Late Payments', 'Charge-offs', 'Hard Inquiries', 'Inaccurate Info', 'Identity Issues'].map((item) => (
                         <div key={item} className="flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           <span>{item}</span>
@@ -248,11 +242,10 @@ const Landing: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-slate-400 text-center mt-6">
-                    🔒 Your credit report is processed securely and never shared.
+                    Your information is processed securely and never shared.
                   </p>
                 </>
               ) : (
-                /* Contact Form */
                 <form onSubmit={handleSubmitForAnalysis} className="space-y-4">
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-bold text-slate-900">Almost there!</h3>
@@ -319,55 +312,33 @@ const Landing: React.FC = () => {
               )}
             </div>
           ) : (
-            /* Results Preview */
             <div className="bg-white rounded-2xl shadow-2xl p-8">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Analysis Complete!</h3>
-                <p className="text-slate-500">We found items that can be addressed with our dispute letters</p>
+                <p className="text-slate-500">We found opportunities to improve your credit</p>
               </div>
 
-              {/* Sample Results */}
               <div className="grid md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-slate-50 p-4 rounded-xl text-center">
                   <p className="text-3xl font-black text-red-600">3-5</p>
-                  <p className="text-sm text-slate-600">Negative Items Found</p>
+                  <p className="text-sm text-slate-600">Items to Address</p>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl text-center">
-                  <p className="text-3xl font-black text-blue-600">4-6</p>
-                  <p className="text-sm text-slate-600">Letters Recommended</p>
+                  <p className="text-3xl font-black text-blue-600">High</p>
+                  <p className="text-sm text-slate-600">Improvement Potential</p>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl text-center">
-                  <p className="text-3xl font-black text-green-600">$1,000+</p>
-                  <p className="text-sm text-slate-600">Potential Damages</p>
+                  <p className="text-3xl font-black text-green-600">60-90</p>
+                  <p className="text-sm text-slate-600">Days to See Results</p>
                 </div>
-              </div>
-
-              {/* Sample Action Items */}
-              <div className="space-y-3 mb-8">
-                <h4 className="font-bold text-slate-900">Your Personalized Action Plan:</h4>
-                {[
-                  { priority: 1, title: 'Re-Insertion Violation', desc: 'Item came back without notice - $1,000 violation', color: 'green' },
-                  { priority: 2, title: 'Collection Account Dispute', desc: 'Debt validation letter required', color: 'blue' },
-                  { priority: 3, title: 'Late Payment Dispute', desc: 'Challenge unverifiable late reporting', color: 'yellow' },
-                ].map((item) => (
-                  <div key={item.priority} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                    <div className={`w-7 h-7 rounded-full bg-${item.color}-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0`}>
-                      {item.priority}
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900">{item.title}</p>
-                      <p className="text-sm text-slate-500">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
 
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
                 <p className="text-blue-800 text-sm">
-                  <strong>Next Step:</strong> One of our credit specialists will contact you within 24 hours to review your personalized action plan and discuss next steps.
+                  <strong>Next Step:</strong> One of our credit specialists will contact you within 24 hours to review your personalized action plan.
                 </p>
               </div>
 
@@ -380,11 +351,9 @@ const Landing: React.FC = () => {
             </div>
           )}
 
-          {/* Get Your Credit Report - Two Options */}
           <div className="mt-10">
             <p className="text-slate-400 text-center mb-4 text-sm uppercase tracking-wide font-medium">Don't have your credit report? Get it here:</p>
             <div className="grid md:grid-cols-2 gap-4">
-              {/* Option 1: AnnualCreditReport.com - Free */}
               <a
                 href="https://www.annualcreditreport.com"
                 target="_blank"
@@ -396,15 +365,9 @@ const Landing: React.FC = () => {
                   <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-white transition" />
                 </div>
                 <h4 className="text-white font-bold text-lg mb-1">AnnualCreditReport.com</h4>
-                <p className="text-slate-300 text-sm mb-3">Official site - free report once per year from each bureau</p>
-                <ul className="text-xs text-slate-400 space-y-1">
-                  <li>✓ Equifax, Experian, TransUnion</li>
-                  <li>✓ Government authorized</li>
-                  <li>✓ No credit card required</li>
-                </ul>
+                <p className="text-slate-300 text-sm">Official free credit report site</p>
               </a>
 
-              {/* Option 2: IdentityIQ - $1 Trial */}
               <a
                 href="https://www.identityiq.com"
                 target="_blank"
@@ -416,17 +379,9 @@ const Landing: React.FC = () => {
                   <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-white transition" />
                 </div>
                 <h4 className="text-white font-bold text-lg mb-1">IdentityIQ</h4>
-                <p className="text-slate-300 text-sm mb-3">All 3 bureaus + scores for $1 (7-day trial)</p>
-                <ul className="text-xs text-slate-400 space-y-1">
-                  <li>✓ All 3 reports + FICO scores</li>
-                  <li>✓ Daily credit monitoring</li>
-                  <li>✓ Instant access</li>
-                </ul>
+                <p className="text-slate-300 text-sm">All 3 bureaus + scores instantly</p>
               </a>
             </div>
-            <p className="text-center text-slate-500 text-xs mt-4">
-              Also available: Credit Karma (free Equifax & TransUnion) • Experian.com (free Experian)
-            </p>
           </div>
         </div>
       </section>
@@ -439,22 +394,22 @@ const Landing: React.FC = () => {
               <div className="mb-4">
                 <Shield className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-3xl font-black mb-1">8</h3>
-              <p className="text-slate-600 font-medium">Letter Types</p>
+              <h3 className="text-3xl font-black mb-1">500+</h3>
+              <p className="text-slate-600 font-medium">Clients Helped</p>
             </div>
             <div className="bg-purple-50 p-8 rounded-[2rem] border border-purple-100 hover:-translate-y-2 transition duration-300">
               <div className="mb-4">
                 <Scale className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="text-3xl font-black mb-1">FCRA</h3>
-              <p className="text-slate-600 font-medium">Legal Citations</p>
+              <h3 className="text-3xl font-black mb-1">3</h3>
+              <p className="text-slate-600 font-medium">Level Approach</p>
             </div>
             <div className="bg-green-50 p-8 rounded-[2rem] border border-green-100 hover:-translate-y-2 transition duration-300">
               <div className="mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <TrendingUp className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-3xl font-black mb-1">30</h3>
-              <p className="text-slate-600 font-medium">Day Investigation</p>
+              <h3 className="text-3xl font-black mb-1">85%</h3>
+              <p className="text-slate-600 font-medium">Success Rate</p>
             </div>
             <div className="bg-orange-50 p-8 rounded-[2rem] border border-orange-100 hover:-translate-y-2 transition duration-300">
               <div className="mb-4">
@@ -471,16 +426,16 @@ const Landing: React.FC = () => {
       <section className="py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-black tracking-tight mb-4">Professional Dispute Letter Services</h2>
-            <p className="text-xl text-slate-500 max-w-2xl mx-auto">We provide 8 types of legally-backed dispute letters to address every credit repair situation</p>
+            <h2 className="text-4xl font-black tracking-tight mb-4">Our Credit Services</h2>
+            <p className="text-xl text-slate-500 max-w-2xl mx-auto">Comprehensive solutions for every credit situation</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Shield, title: "Bureau Dispute", desc: "FCRA § 1681i", color: "blue" },
-              { icon: AlertTriangle, title: "Identity Theft", desc: "FCRA § 605(b)", color: "orange" },
-              { icon: Search, title: "Verification", desc: "FCRA § 611(a)(7)", color: "pink" },
-              { icon: FileText, title: "Creditor Dispute", desc: "FCRA § 1681s-2(b)", color: "blue" },
+              { icon: Shield, title: "Credit Disputes", desc: "Challenge inaccurate items", color: "blue" },
+              { icon: Search, title: "Report Analysis", desc: "Find hidden errors", color: "green" },
+              { icon: FileText, title: "Professional Letters", desc: "Sent via certified mail", color: "purple" },
+              { icon: TrendingUp, title: "Credit Building", desc: "Strategies for growth", color: "orange" },
             ].map((service, index) => (
               <div key={index} className="bg-white p-6 rounded-2xl border border-slate-100 hover:shadow-lg transition">
                 <div className={`p-3 bg-${service.color}-500 rounded-xl w-fit mb-4`}>
@@ -494,7 +449,7 @@ const Landing: React.FC = () => {
 
           <div className="text-center mt-10">
             <Link to="/services" className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
-              View All 8 Services
+              View All Services
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
@@ -505,9 +460,9 @@ const Landing: React.FC = () => {
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-12 text-center text-white">
-            <h2 className="text-4xl font-black mb-4">Ready to Fix Your Credit?</h2>
+            <h2 className="text-4xl font-black mb-4">Ready to Transform Your Credit?</h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Get a free consultation and learn how our legally-backed dispute letters can help improve your credit report.
+              Join hundreds of clients who have improved their credit with Three Level Credit.
             </p>
             <Link to="/contact" className="inline-flex items-center gap-2 px-8 py-4 bg-yellow-400 text-slate-900 rounded-xl font-bold text-lg hover:bg-yellow-300 transition">
               Get Your Free Consultation
