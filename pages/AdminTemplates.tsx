@@ -210,6 +210,54 @@ const AdminTemplates: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Re-Insertion Guide - Only show for reinsertion_violation template */}
+                  {selectedTemplate.id === 'reinsertion_violation' && (
+                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
+                        <DollarSign className="h-5 w-5" />
+                        Does Your Client Have a Re-Insertion Case? ($1,000 Potential)
+                      </h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                          <div>
+                            <p className="font-medium text-green-800">Did they dispute an item in the past?</p>
+                            <p className="text-green-600">Could be a collection, charge-off, late payment, inquiry, or any negative item</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                          <div>
+                            <p className="font-medium text-green-800">Was the item successfully deleted/removed?</p>
+                            <p className="text-green-600">Check for deletion confirmation letter or if item disappeared from report</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                          <div>
+                            <p className="font-medium text-green-800">Is that same item back on their credit report now?</p>
+                            <p className="text-green-600">Pull current credit report and check if the item reappeared</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
+                          <div>
+                            <p className="font-medium text-green-800">Did they receive written notice within 5 days?</p>
+                            <p className="text-green-600">Bureaus MUST notify within 5 business days of re-inserting</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                        <p className="font-bold text-green-900">
+                          If YES to #1-3 and NO to #4 = <span className="text-green-700">$1,000 VIOLATION CASE!</span>
+                        </p>
+                        <p className="text-sm text-green-700 mt-1">
+                          The bureau re-inserted the item WITHOUT proper notice. This is an automatic FCRA § 611 violation entitling your client to statutory damages.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Placeholder Notice */}
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <p className="text-sm text-yellow-800">
@@ -232,8 +280,59 @@ const AdminTemplates: React.FC = () => {
                       <li>• Keep a copy of the letter and the certified mail receipt for your records</li>
                       <li>• The return receipt (green card) provides proof of delivery</li>
                       <li>• Tracking number format: 9407 3000 0000 0000 0000 00</li>
-                      <li>• Cost: Approximately $7-8 per letter (certified + return receipt)</li>
                     </ul>
+                  </div>
+
+                  {/* Mailing Cost Breakdown */}
+                  <div className="bg-green-50 border border-green-100 rounded-lg p-4 mb-6">
+                    <h4 className="font-bold text-green-900 mb-3">USPS Certified Mail Cost Breakdown</h4>
+                    <div className="grid md:grid-cols-3 gap-4 text-sm">
+                      <div className="bg-white p-3 rounded border border-green-200">
+                        <p className="font-medium text-green-800">Certified Mail Fee</p>
+                        <p className="text-2xl font-bold text-green-700">$4.10</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-green-200">
+                        <p className="font-medium text-green-800">Return Receipt</p>
+                        <p className="text-2xl font-bold text-green-700">$3.35</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-green-200">
+                        <p className="font-medium text-green-800">First-Class Postage</p>
+                        <p className="text-2xl font-bold text-green-700">$0.68</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-green-200 flex justify-between items-center">
+                      <span className="font-bold text-green-900">Total per letter:</span>
+                      <span className="text-xl font-bold text-green-700">~$8.13</span>
+                    </div>
+                    <p className="text-xs text-green-600 mt-2">* Prices as of 2024 - rates may vary</p>
+                  </div>
+
+                  {/* When to Use Certified Mail */}
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-6">
+                    <h4 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      When to Use Certified Mail
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex gap-3">
+                        <div className="w-28 font-bold text-red-700">ALWAYS</div>
+                        <div className="flex-1 text-amber-700">
+                          When demanding money ($1,000 damages), for identity theft cases, re-insertion violations, or if you might file a CFPB complaint or lawsuit
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-28 font-bold text-yellow-700">RECOMMENDED</div>
+                        <div className="flex-1 text-amber-700">
+                          For bureau disputes and method of verification requests - creates paper trail
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-28 font-bold text-green-700">OPTIONAL</div>
+                        <div className="flex-1 text-amber-700">
+                          For goodwill requests and simple creditor disputes without damage claims
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Bureau Addresses */}

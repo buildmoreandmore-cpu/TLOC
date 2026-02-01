@@ -437,64 +437,116 @@ Enclosures:
     id: 'reinsertion_violation',
     name: 'Re-Insertion Violation Letter',
     category: 'VIOLATION',
-    description: 'Demands removal AND $1,000 statutory damages for re-inserting a previously deleted item without proper 5-day notice.',
+    description: 'Demands removal AND $1,000 statutory damages for re-inserting a previously deleted item without proper 5-day notice. Bureaus must notify you within 5 business days of re-inserting deleted information - if they did not, this is an automatic FCRA violation.',
     legalBasis: 'FCRA § 611(a)(5)(B), 15 U.S.C. § 1681i(a)(5), § 1681n',
-    useCase: 'Use when a previously deleted item reappears on your credit report and you did NOT receive written notice within 5 days of the re-insertion.',
+    useCase: 'Use when a previously deleted item reappears on your credit report and you did NOT receive written notice within 5 days of the re-insertion. This is a powerful letter because most bureaus fail to send the required notice, making this an automatic $1,000 violation case.',
     mailMethod: 'certified_required',
     successRate: 'High',
     potentialDamages: 1000,
+    attachments: ['Copy of government-issued ID', 'Proof of address', 'Original deletion confirmation (if available)', 'Current credit report showing re-insertion'],
     content: `[DATE]
+
+[CLIENT_NAME]
+[CLIENT_ADDRESS]
+[CLIENT_CITY], [CLIENT_STATE] [CLIENT_ZIP]
 
 [BUREAU_NAME]
 [BUREAU_ADDRESS]
 
-Re: FCRA VIOLATION - Illegal Re-Insertion of Previously Deleted Information
-Social Security Number: XXX-XX-[LAST_4_SSN]
+Re: NOTICE OF FCRA § 611 VIOLATION - RE-INSERTION OF PREVIOUSLY DELETED INFORMATION
+Account: [CREDITOR_NAME] [ACCOUNT_NUMBER]
 
-Dear Sir or Madam:
+To Whom It May Concern:
 
-I am writing to notify you of a serious violation of the Fair Credit Reporting Act regarding the re-insertion of information that was previously deleted from my credit report.
+This letter serves as formal notice that you have VIOLATED THE FAIR CREDIT REPORTING ACT (FCRA) by re-inserting previously deleted information onto my credit report without complying with the mandatory requirements of 15 U.S.C. § 1681i(a)(5).
 
-IMPROPERLY RE-INSERTED ITEM:
-Creditor Name: [CREDITOR_NAME]
-Account Number: [ACCOUNT_NUMBER]
-Original Deletion Date: [DELETION_DATE]
-Date Item Reappeared: [REINSERTION_DATE]
+═══════════════════════════════════════════════════════════════════════
+TIMELINE OF EVENTS:
+═══════════════════════════════════════════════════════════════════════
 
-Under the Fair Credit Reporting Act, 15 U.S.C. § 611(a)(5)(B), a consumer reporting agency may NOT reinsert previously deleted information unless:
+• Original Dispute Filed: [ORIGINAL_DISPUTE_DATE]
+• Item Deleted from Credit File: [DELETION_DATE]
+• Re-Insertion Discovered: [REINSERTION_DISCOVERY_DATE]
 
-1. The information is certified by the furnisher as complete and accurate; AND
-2. The agency provides the consumer with WRITTEN NOTICE within 5 business days of the reinsertion that includes:
-   a. Statement that the item has been reinserted
-   b. Name, address, and phone number of the furnisher
-   c. Notification of the consumer's right to add a statement
+I disputed the above-referenced account on [ORIGINAL_DISPUTE_DATE]. Following your investigation, this item was DELETED from my credit file, as confirmed by my credit report dated [DELETION_DATE].
 
-I HEREBY CERTIFY THAT I DID NOT RECEIVE THE REQUIRED 5-DAY WRITTEN NOTIFICATION BEFORE THIS RE-INSERTION.
+I have now discovered that this same item has been RE-INSERTED onto my credit report as of [REINSERTION_DISCOVERY_DATE].
 
-This is a WILLFUL VIOLATION of the FCRA. Under 15 U.S.C. § 1681n, I am entitled to:
-• Statutory damages of $100 to $1,000 PER VIOLATION
-• Punitive damages
-• Attorney's fees and costs
+═══════════════════════════════════════════════════════════════════════
+NOTICE VIOLATION:
+═══════════════════════════════════════════════════════════════════════
 
-I DEMAND that you:
-1. IMMEDIATELY delete this improperly re-inserted information
-2. Provide me with a copy of the furnisher's certification (if any exists)
-3. Provide documentation of when and how notice was allegedly sent to me
-4. Explain your internal procedures for complying with § 611(a)(5)(B)
-5. Send me an updated credit report showing the deletion
-6. Pay statutory damages of $1,000 for this willful violation
+I did NOT receive any written notification of this re-insertion within 5 business days, or at any time.
 
-If this matter is not resolved within 15 days, I will pursue all available legal remedies, including filing a complaint with the Consumer Financial Protection Bureau and consulting with an FCRA attorney regarding litigation.
+This is a direct violation of FCRA § 611(a)(5)(B), which states:
 
-Sincerely,
+    "If any information that has been deleted from a consumer's file pursuant
+    to subparagraph (A) is reinserted in the file, the consumer reporting agency
+    shall notify the consumer of the reinsertion in writing not later than 5
+    business days after the reinsertion..."
+
+Under 15 U.S.C. § 1681n, I am entitled to STATUTORY DAMAGES OF $100 TO $1,000 for your willful noncompliance with the FCRA, plus punitive damages and attorney's fees as the court may allow.
+
+═══════════════════════════════════════════════════════════════════════
+LEGAL REQUIREMENTS YOU HAVE VIOLATED:
+═══════════════════════════════════════════════════════════════════════
+
+FCRA § 611(a)(5)(A) - Certification Requirement:
+    "If any information is deleted from a consumer's file pursuant to
+    subparagraph (A), the information may not be reinserted in the file by
+    the consumer reporting agency unless the person who furnishes the
+    information certifies that the information is complete and accurate."
+
+FCRA § 611(a)(5)(B) - Notice Requirement:
+    The bureau must provide written notice within 5 business days including:
+    (i) statement that disputed information has been reinserted;
+    (ii) name, address, and telephone number of the furnisher;
+    (iii) notice of the consumer's right to add a statement disputing the information.
+
+═══════════════════════════════════════════════════════════════════════
+DEMANDS:
+═══════════════════════════════════════════════════════════════════════
+
+I demand that you immediately take the following actions:
+
+1. IMMEDIATELY DELETE the re-inserted item from my credit file.
+
+2. PROVIDE WRITTEN CONFIRMATION of the deletion within 15 days of receipt of this letter.
+
+3. PROVIDE THE NAME, ADDRESS, AND TELEPHONE NUMBER of the furnisher who purportedly certified this information as "complete and accurate" per § 611(a)(5)(A).
+
+4. REMIT $1,000 IN STATUTORY DAMAGES for your willful violation of FCRA § 611(a)(5)(B) within 30 days.
+
+═══════════════════════════════════════════════════════════════════════
+NOTICE OF INTENT TO PURSUE REMEDIES:
+═══════════════════════════════════════════════════════════════════════
+
+If this matter is not resolved within 15 days of your receipt of this letter, I intend to:
+
+• File a formal complaint with the Consumer Financial Protection Bureau (CFPB)
+• File a complaint with the Federal Trade Commission (FTC)
+• Pursue all available civil remedies under 15 U.S.C. § 1681n (willful noncompliance) and § 1681o (negligent noncompliance), including statutory damages, punitive damages, and attorney's fees
+
+Please govern yourself accordingly.
+
+
+Respectfully,
+
+
 
 _______________________________
 [CLIENT_NAME]
-[CLIENT_ADDRESS]
+
 
 Enclosures:
-• Copy of credit report showing re-inserted item
-• Copy of previous deletion confirmation`
+• Copy of government-issued identification
+• Copy of proof of address
+• Copy of original deletion confirmation (if available)
+• Copy of current credit report showing re-insertion
+
+═══════════════════════════════════════════════════════════════════════
+SENT VIA CERTIFIED MAIL, RETURN RECEIPT REQUESTED
+═══════════════════════════════════════════════════════════════════════`
   },
   {
     id: 'unauthorized_inquiry_bureau',
