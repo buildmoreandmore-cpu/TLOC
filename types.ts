@@ -29,6 +29,7 @@ export interface DisputeLetter {
   content: string;
   createdAt: string;
   status: 'needs_notary' | 'ready_to_mail' | 'processing' | 'in_transit' | 'delivered' | 'mailed' | 'awaiting_response' | 'response_received' | 'completed' | 'draft' | 'sent' | 'responded';
+  price?: number;           // Price charged for this letter
   dateMailed?: string;
   trackingNumber?: string;
   bureau?: string;

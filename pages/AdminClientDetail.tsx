@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Client, DisputeLetter } from '../types';
 import { DISPUTE_TEMPLATES } from '../constants';
 import { generateDisputeLetter } from '../geminiService';
-import { Upload, FileText, AlertTriangle, CheckCircle, Lightbulb, X, Copy, Download } from 'lucide-react';
+import { Upload, FileText, AlertTriangle, CheckCircle, Lightbulb, X, Copy, Download, DollarSign } from 'lucide-react';
 
 interface Props {
   clients: Client[];
@@ -24,6 +24,16 @@ interface AnalysisResult {
   summary: string;
 }
 
+// Default prices for letter types
+const LETTER_PRICES = [
+  { label: 'Basic Letter', price: 25 },
+  { label: 'Standard Letter', price: 50 },
+  { label: 'Advanced Letter', price: 75 },
+  { label: 'Premium Letter', price: 100 },
+  { label: 'Violation Letter', price: 150 },
+  { label: 'Custom', price: 0 },
+];
+
 const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setLetters }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,12 +43,33 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
   const [generating, setGenerating] = useState(false);
   const [previewLetter, setPreviewLetter] = useState('');
 
+  // Pricing state
+  const [selectedPriceOption, setSelectedPriceOption] = useState('Standard Letter');
+  const [customPrice, setCustomPrice] = useState('');
+  const [letterPrice, setLetterPrice] = useState(50);
+
   // Credit report analysis state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [reportText, setReportText] = useState('');
   const [dragActive, setDragActive] = useState(false);
+
+  // Update letter price when option changes
+  const handlePriceOptionChange = (option: string) => {
+    setSelectedPriceOption(option);
+    if (option !== 'Custom') {
+      const priceObj = LETTER_PRICES.find(p => p.label === option);
+      setLetterPrice(priceObj?.price || 50);
+      setCustomPrice('');
+    }
+  };
+
+  const handleCustomPriceChange = (value: string) => {
+    setCustomPrice(value);
+    const numValue = parseFloat(value) || 0;
+    setLetterPrice(numValue);
+  };
 
   if (!client) return <div>Client not found</div>;
 
@@ -228,12 +259,13 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
       templateId: selectedTemplate,
       content: previewLetter,
       createdAt: new Date().toISOString().split('T')[0],
-      status: 'draft'
+      status: 'draft',
+      price: letterPrice
     };
     setLetters([newLetter, ...letters]);
     setPreviewLetter('');
     setSelectedItems([]);
-    alert('Letter saved to generated letters repository!');
+    alert(`Letter saved! Price: $${letterPrice.toFixed(2)}`);
   };
 
   const clearAnalysis = () => {
@@ -460,10 +492,54 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                 ))}
               </div>
 
+              {/* Pricing Section */}
+              <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <h4 className="font-bold text-slate-800 mb-3">Letter Pricing</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1">Price Tier</label>
+                    <select
+                      value={selectedPriceOption}
+                      onChange={(e) => handlePriceOptionChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+                    >
+                      {LETTER_PRICES.map((option) => (
+                        <option key={option.label} value={option.label}>
+                          {option.label} {option.price > 0 ? `($${option.price})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1">
+                      {selectedPriceOption === 'Custom' ? 'Enter Price' : 'Price'}
+                    </label>
+                    {selectedPriceOption === 'Custom' ? (
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                        <input
+                          type="number"
+                          value={customPrice}
+                          onChange={(e) => handleCustomPriceChange(e.target.value)}
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-7 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <div className="px-3 py-2 bg-green-100 text-green-800 font-bold rounded-lg text-center">
+                        ${letterPrice.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <button
                 onClick={handleGenerate}
                 disabled={generating || !selectedTemplate}
-                className={`w-full mt-6 py-4 rounded-xl font-bold text-white transition flex items-center justify-center gap-2 ${
+                className={`w-full mt-4 py-4 rounded-xl font-bold text-white transition flex items-center justify-center gap-2 ${
                   generating || !selectedTemplate ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
@@ -475,7 +551,7 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                 ) : (
                   <>
                     <FileText className="h-5 w-5" />
-                    Generate Dispute Letter
+                    Generate Letter (${letterPrice.toFixed(2)})
                   </>
                 )}
               </button>
@@ -486,7 +562,13 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
           {previewLetter && (
             <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-green-200">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-slate-900">Generated Letter</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-slate-900">Generated Letter</h3>
+                  <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">
+                    <DollarSign className="h-4 w-4" />
+                    {letterPrice.toFixed(2)}
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigator.clipboard.writeText(previewLetter)}
@@ -511,9 +593,10 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                   </button>
                   <button
                     onClick={saveLetter}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition"
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition flex items-center gap-2"
                   >
-                    Save & Archive
+                    <DollarSign className="h-4 w-4" />
+                    Save (${letterPrice.toFixed(2)})
                   </button>
                 </div>
               </div>
