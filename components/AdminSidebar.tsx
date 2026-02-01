@@ -15,6 +15,7 @@ const AdminSidebar: React.FC<Props> = ({ onLogout }) => {
     { label: 'Clients', path: '/dashboard/clients', icon: '👥' },
     { label: 'Generated Letters', path: '/dashboard/letters', icon: '✉️' },
     { label: 'Templates', path: '/dashboard/templates', icon: '📄' },
+    { label: 'Credit Building', path: '/dashboard/credit-building', icon: '📈' },
   ];
 
   return (

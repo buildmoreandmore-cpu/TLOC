@@ -18,6 +18,7 @@ import AdminClients from './pages/AdminClients';
 import AdminClientDetail from './pages/AdminClientDetail';
 import AdminLetters from './pages/AdminLetters';
 import AdminTemplates from './pages/AdminTemplates';
+import AdminCreditBuilding from './pages/AdminCreditBuilding';
 
 // Components
 import Navbar from './components/Navbar';
@@ -136,6 +137,16 @@ const App: React.FC = () => {
                   <AdminSidebar onLogout={handleLogout} />
                   <div className="flex-1 overflow-auto p-4 md:p-8">
                     <AdminTemplates />
+                  </div>
+                </div>
+              </AdminRoute>
+            } />
+            <Route path="/dashboard/credit-building" element={
+              <AdminRoute isAdmin={isAdmin}>
+                <div className="flex h-screen bg-slate-100 overflow-hidden">
+                  <AdminSidebar onLogout={handleLogout} />
+                  <div className="flex-1 overflow-auto p-4 md:p-8">
+                    <AdminCreditBuilding />
                   </div>
                 </div>
               </AdminRoute>
