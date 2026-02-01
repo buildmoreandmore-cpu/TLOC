@@ -1,50 +1,123 @@
 
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, Phone, Mail, MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear();
+
+  const menuSections = [
+    {
+      title: 'Services',
+      links: [
+        { label: 'Bureau Disputes', path: '/services#bureau' },
+        { label: 'Identity Theft Removal', path: '/services#identity' },
+        { label: 'Creditor Disputes', path: '/services#creditor' },
+        { label: 'Late Payment Removal', path: '/services#late' },
+        { label: 'Inquiry Removal', path: '/services#inquiry' },
+      ]
+    },
+    {
+      title: 'Company',
+      links: [
+        { label: 'Home', path: '/' },
+        { label: 'About Us', path: '/services' },
+        { label: 'Our Process', path: '/services' },
+        { label: 'Contact', path: '/contact' },
+        { label: 'Client Portal', path: '/login' },
+      ]
+    },
+    {
+      title: 'Resources',
+      links: [
+        { label: 'Free Credit Report', path: '/#analyzer', external: false },
+        { label: 'FCRA Rights', path: '/services' },
+        { label: 'Dispute Process', path: '/services' },
+        { label: 'FAQs', path: '/contact' },
+      ]
+    },
+  ];
+
   return (
-    <footer className="bg-white border-t border-slate-100 pt-24 pb-16">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 mb-6">
+    <footer className="bg-slate-900 text-white">
+      {/* Main Footer */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+          {/* Brand Column */}
+          <div className="lg:col-span-2">
+            <Link to="/" className="flex items-center gap-2 mb-6">
               <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black">T</div>
               <span className="text-2xl font-black tracking-tight">Three Level of Credit</span>
-            </div>
-            <p className="text-lg text-slate-500 max-w-sm leading-relaxed mb-6">
+            </Link>
+            <p className="text-slate-400 leading-relaxed mb-6 max-w-sm">
               Professional credit repair services using legally-backed dispute letters. We cite the exact federal laws that protect your rights.
             </p>
-            <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
+            <div className="flex items-center gap-2 text-sm text-blue-400 font-medium mb-8">
               <Shield className="h-4 w-4" />
               <span>FCRA Compliant Dispute Letters</span>
             </div>
+
+            {/* Contact Info */}
+            <div className="space-y-3">
+              <a href="tel:+1234567890" className="flex items-center gap-3 text-slate-400 hover:text-white transition">
+                <Phone className="h-4 w-4" />
+                <span>(123) 456-7890</span>
+              </a>
+              <a href="mailto:info@threelevelofcredit.com" className="flex items-center gap-3 text-slate-400 hover:text-white transition">
+                <Mail className="h-4 w-4" />
+                <span>info@threelevelofcredit.com</span>
+              </a>
+              <div className="flex items-center gap-3 text-slate-400">
+                <MapPin className="h-4 w-4" />
+                <span>Atlanta, GA</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="text-black font-black uppercase text-[10px] tracking-[0.2em] mb-6">Services</h4>
-            <ul className="space-y-3 text-base font-medium">
-              <li><a href="/#/services" className="text-slate-500 hover:text-black transition">Bureau Disputes</a></li>
-              <li><a href="/#/services" className="text-slate-500 hover:text-black transition">Identity Theft Removal</a></li>
-              <li><a href="/#/services" className="text-slate-500 hover:text-black transition">Creditor Disputes</a></li>
-              <li><a href="/#/services" className="text-slate-500 hover:text-black transition">Verification Letters</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-black font-black uppercase text-[10px] tracking-[0.2em] mb-6">Company</h4>
-            <ul className="space-y-3 text-base font-medium">
-              <li><a href="/#/" className="text-slate-500 hover:text-black transition">Home</a></li>
-              <li><a href="/#/services" className="text-slate-500 hover:text-black transition">Services</a></li>
-              <li><a href="/#/contact" className="text-slate-500 hover:text-black transition">Contact</a></li>
-              <li><a href="/#/login" className="text-slate-500 hover:text-black transition">Client Portal</a></li>
-            </ul>
-          </div>
+
+          {/* Menu Columns */}
+          {menuSections.map((section) => (
+            <div key={section.title}>
+              <h4 className="text-white font-bold uppercase text-xs tracking-wider mb-6">
+                {section.title}
+              </h4>
+              <ul className="space-y-3">
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.path}
+                      className="text-slate-400 hover:text-white transition text-sm"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <div className="mt-16 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-400 text-sm">
-            &copy; {new Date().getFullYear()} Three Level of Credit. All rights reserved.
-          </p>
-          <p className="text-slate-400 text-xs max-w-lg text-center md:text-right">
-            Disclaimer: Results may vary. We do not guarantee specific credit score improvements. Credit repair takes time and depends on individual circumstances.
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-slate-500 text-sm">
+              &copy; {currentYear} Three Level of Credit. All rights reserved.
+            </p>
+            <div className="flex items-center gap-6 text-sm">
+              <Link to="/contact" className="text-slate-500 hover:text-white transition">
+                Privacy Policy
+              </Link>
+              <Link to="/contact" className="text-slate-500 hover:text-white transition">
+                Terms of Service
+              </Link>
+              <Link to="/contact" className="text-slate-500 hover:text-white transition">
+                Disclaimer
+              </Link>
+            </div>
+          </div>
+          <p className="text-slate-600 text-xs mt-4 text-center md:text-left max-w-3xl">
+            Disclaimer: Results may vary. We do not guarantee specific credit score improvements. Credit repair takes time and depends on individual circumstances. We are not attorneys and do not provide legal advice.
           </p>
         </div>
       </div>
