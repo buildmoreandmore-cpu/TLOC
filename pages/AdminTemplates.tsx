@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { DISPUTE_TEMPLATES, BUREAU_ADDRESSES } from '../constants';
-import { Shield, AlertTriangle, Scale, CheckCircle, Copy, X, Mail, FileText, Clock, DollarSign } from 'lucide-react';
+import { Shield, AlertTriangle, Scale, CheckCircle, Copy, X, Mail, FileText, Clock, DollarSign, Plus, Trash2, Download, Send } from 'lucide-react';
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
   COLLECTION: { label: 'Collection', color: 'text-red-700', bgColor: 'bg-red-50' },
@@ -22,16 +22,181 @@ const MAIL_METHOD_CONFIG: Record<string, { label: string; color: string }> = {
   regular_ok: { label: 'Regular Mail OK', color: 'text-green-600' },
 };
 
+const DISPUTE_REASONS = [
+  'This account does not belong to me',
+  'I never authorized this account',
+  'The balance reported is incorrect',
+  'The dates reported are inaccurate',
+  'This account was paid/settled',
+  'This is a duplicate account',
+  'The account status is wrong',
+  'The payment history is inaccurate',
+  'This account was included in bankruptcy',
+  'The creditor name is wrong',
+  'I was a victim of identity theft',
+  'Other (explain in letter)',
+];
+
+interface DisputedItem {
+  id: string;
+  creditorName: string;
+  accountNumber: string;
+  disputeReason: string;
+}
+
+interface ClientInfo {
+  fullName: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  ssnLast4: string;
+  dob: string;
+  email: string;
+  phone: string;
+  bureau: string;
+}
+
 const AdminTemplates: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<typeof DISPUTE_TEMPLATES[0] | null>(null);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'content' | 'mailing'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'generate' | 'mailing'>('content');
+  const [generatedLetter, setGeneratedLetter] = useState<string>('');
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Form state
+  const [clientInfo, setClientInfo] = useState<ClientInfo>({
+    fullName: '',
+    streetAddress: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    ssnLast4: '',
+    dob: '',
+    email: '',
+    phone: '',
+    bureau: 'Equifax',
+  });
+
+  const [disputedItems, setDisputedItems] = useState<DisputedItem[]>([
+    { id: '1', creditorName: '', accountNumber: '', disputeReason: 'This account does not belong to me' }
+  ]);
 
   const copyContent = async () => {
     if (!selectedTemplate) return;
     await navigator.clipboard.writeText(selectedTemplate.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const addDisputedItem = () => {
+    setDisputedItems([
+      ...disputedItems,
+      { id: Date.now().toString(), creditorName: '', accountNumber: '', disputeReason: 'This account does not belong to me' }
+    ]);
+  };
+
+  const removeDisputedItem = (id: string) => {
+    if (disputedItems.length > 1) {
+      setDisputedItems(disputedItems.filter(item => item.id !== id));
+    }
+  };
+
+  const updateDisputedItem = (id: string, field: keyof DisputedItem, value: string) => {
+    setDisputedItems(disputedItems.map(item =>
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const generateLetter = () => {
+    if (!selectedTemplate) return;
+
+    const today = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Get bureau address
+    const bureauKey = clientInfo.bureau.toLowerCase().replace(' ', '') as keyof typeof BUREAU_ADDRESSES;
+    const bureauAddress = BUREAU_ADDRESSES[bureauKey] || BUREAU_ADDRESSES.equifax;
+
+    // Build disputed items text
+    const disputedItemsText = disputedItems.map((item, index) => `
+DISPUTED ITEM ${index + 1}:
+Creditor Name: ${item.creditorName || '[CREDITOR_NAME]'}
+Account Number: ${item.accountNumber || '[ACCOUNT_NUMBER]'}
+Reason for Dispute: ${item.disputeReason}
+`).join('\n');
+
+    // Replace placeholders in template
+    let letter = selectedTemplate.content
+      .replace(/\[DATE\]/g, today)
+      .replace(/\[CLIENT_NAME\]/g, clientInfo.fullName || '[YOUR NAME]')
+      .replace(/\[CLIENT_ADDRESS\]/g, clientInfo.streetAddress || '[YOUR ADDRESS]')
+      .replace(/\[CLIENT_CITY\]/g, clientInfo.city || '[CITY]')
+      .replace(/\[CLIENT_STATE\]/g, clientInfo.state || '[STATE]')
+      .replace(/\[CLIENT_ZIP\]/g, clientInfo.zipCode || '[ZIP]')
+      .replace(/\[LAST_4_SSN\]/g, clientInfo.ssnLast4 || 'XXXX')
+      .replace(/\[DOB\]/g, clientInfo.dob || '[DATE OF BIRTH]')
+      .replace(/\[DATE_OF_BIRTH\]/g, clientInfo.dob || '[DATE OF BIRTH]')
+      .replace(/\[CLIENT_EMAIL\]/g, clientInfo.email || '[EMAIL]')
+      .replace(/\[CLIENT_PHONE\]/g, clientInfo.phone || '[PHONE]')
+      .replace(/\[BUREAU_NAME\]/g, bureauAddress.name)
+      .replace(/\[BUREAU_ADDRESS\]/g, `${bureauAddress.address}\n${bureauAddress.cityStateZip}`)
+      .replace(/\[CREDITOR_NAME\]/g, disputedItems[0]?.creditorName || '[CREDITOR_NAME]')
+      .replace(/\[ACCOUNT_NUMBER\]/g, disputedItems[0]?.accountNumber || '[ACCOUNT_NUMBER]');
+
+    // If there are multiple disputed items, append them
+    if (disputedItems.length > 1 || disputedItems[0]?.creditorName) {
+      // Find where to insert disputed items section (after MY INFORMATION section if it exists)
+      const myInfoMatch = letter.match(/MY INFORMATION:[\s\S]*?(?=\n\n[A-Z])/);
+      if (myInfoMatch) {
+        const insertIndex = letter.indexOf(myInfoMatch[0]) + myInfoMatch[0].length;
+        letter = letter.slice(0, insertIndex) + '\n' + disputedItemsText + letter.slice(insertIndex);
+      }
+    }
+
+    setGeneratedLetter(letter);
+    setShowPreview(true);
+  };
+
+  const downloadLetter = () => {
+    if (!generatedLetter || !selectedTemplate) return;
+
+    const element = document.createElement('a');
+    const file = new Blob([generatedLetter], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${selectedTemplate.name.replace(/\s+/g, '_')}_${clientInfo.fullName.replace(/\s+/g, '_') || 'Letter'}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const copyGeneratedLetter = async () => {
+    await navigator.clipboard.writeText(generatedLetter);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const resetForm = () => {
+    setClientInfo({
+      fullName: '',
+      streetAddress: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      ssnLast4: '',
+      dob: '',
+      email: '',
+      phone: '',
+      bureau: 'Equifax',
+    });
+    setDisputedItems([
+      { id: '1', creditorName: '', accountNumber: '', disputeReason: 'This account does not belong to me' }
+    ]);
+    setGeneratedLetter('');
+    setShowPreview(false);
   };
 
   return (
@@ -69,6 +234,7 @@ const AdminTemplates: React.FC = () => {
               onClick={() => {
                 setSelectedTemplate(template);
                 setActiveTab('content');
+                resetForm();
               }}
               className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-blue-200 transition cursor-pointer"
             >
@@ -127,7 +293,10 @@ const AdminTemplates: React.FC = () => {
                 <h2 className="text-xl font-bold text-slate-900">{selectedTemplate.name}</h2>
               </div>
               <button
-                onClick={() => setSelectedTemplate(null)}
+                onClick={() => {
+                  setSelectedTemplate(null);
+                  resetForm();
+                }}
                 className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition"
               >
                 <X className="h-6 w-6" />
@@ -145,6 +314,17 @@ const AdminTemplates: React.FC = () => {
                 }`}
               >
                 Letter Content
+              </button>
+              <button
+                onClick={() => setActiveTab('generate')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-1.5 ${
+                  activeTab === 'generate'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Send className="h-4 w-4" />
+                Generate Letter
               </button>
               <button
                 onClick={() => setActiveTab('mailing')}
@@ -269,6 +449,231 @@ const AdminTemplates: React.FC = () => {
                   <pre className="whitespace-pre-wrap font-mono text-sm text-slate-800 bg-slate-50 p-6 rounded-lg border border-slate-200 max-h-[400px] overflow-auto">
                     {selectedTemplate.content}
                   </pre>
+                </>
+              ) : activeTab === 'generate' ? (
+                <>
+                  {!showPreview ? (
+                    <>
+                      {/* Your Information Section */}
+                      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">Your Information</h3>
+                        <p className="text-sm text-slate-500 mb-6">This will appear on your letter</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                            <input
+                              type="text"
+                              value={clientInfo.fullName}
+                              onChange={(e) => setClientInfo({...clientInfo, fullName: e.target.value})}
+                              placeholder="John Doe"
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Credit Bureau</label>
+                            <select
+                              value={clientInfo.bureau}
+                              onChange={(e) => setClientInfo({...clientInfo, bureau: e.target.value})}
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+                            >
+                              <option value="Equifax">Equifax</option>
+                              <option value="Experian">Experian</option>
+                              <option value="TransUnion">TransUnion</option>
+                              <option value="Innovis">Innovis</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-slate-700 mb-1">Street Address</label>
+                          <input
+                            type="text"
+                            value={clientInfo.streetAddress}
+                            onChange={(e) => setClientInfo({...clientInfo, streetAddress: e.target.value})}
+                            placeholder="123 Main Street"
+                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+                            <input
+                              type="text"
+                              value={clientInfo.city}
+                              onChange={(e) => setClientInfo({...clientInfo, city: e.target.value})}
+                              placeholder="Atlanta"
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+                            <input
+                              type="text"
+                              value={clientInfo.state}
+                              onChange={(e) => setClientInfo({...clientInfo, state: e.target.value})}
+                              placeholder="GA"
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">ZIP Code</label>
+                            <input
+                              type="text"
+                              value={clientInfo.zipCode}
+                              onChange={(e) => setClientInfo({...clientInfo, zipCode: e.target.value})}
+                              placeholder="30301"
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">SSN (Last 4)</label>
+                            <input
+                              type="text"
+                              maxLength={4}
+                              value={clientInfo.ssnLast4}
+                              onChange={(e) => setClientInfo({...clientInfo, ssnLast4: e.target.value.replace(/\D/g, '').slice(0, 4)})}
+                              placeholder="1234"
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                            <input
+                              type="text"
+                              value={clientInfo.dob}
+                              onChange={(e) => setClientInfo({...clientInfo, dob: e.target.value})}
+                              placeholder="01/15/1980"
+                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Disputed Items Section */}
+                      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">Disputed Items</h3>
+                        <p className="text-sm text-slate-500 mb-6">Add the accounts or items to dispute</p>
+
+                        {disputedItems.map((item, index) => (
+                          <div key={item.id} className="border border-slate-200 rounded-lg p-4 mb-4">
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="font-semibold text-slate-800">Item {index + 1}</h4>
+                              {disputedItems.length > 1 && (
+                                <button
+                                  onClick={() => removeDisputedItem(item.id)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Creditor Name</label>
+                                <input
+                                  type="text"
+                                  value={item.creditorName}
+                                  onChange={(e) => updateDisputedItem(item.id, 'creditorName', e.target.value)}
+                                  placeholder="e.g., ABC Collections"
+                                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Account Number</label>
+                                <input
+                                  type="text"
+                                  value={item.accountNumber}
+                                  onChange={(e) => updateDisputedItem(item.id, 'accountNumber', e.target.value)}
+                                  placeholder="e.g., XXXX1234"
+                                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Dispute Reason</label>
+                              <select
+                                value={item.disputeReason}
+                                onChange={(e) => updateDisputedItem(item.id, 'disputeReason', e.target.value)}
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+                              >
+                                {DISPUTE_REASONS.map(reason => (
+                                  <option key={reason} value={reason}>{reason}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        ))}
+
+                        <button
+                          onClick={addDisputedItem}
+                          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Another Dispute
+                        </button>
+                      </div>
+
+                      {/* Generate Button */}
+                      <button
+                        onClick={generateLetter}
+                        className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                      >
+                        <Send className="h-5 w-5" />
+                        Create Letter
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Preview Generated Letter */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 flex items-center gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="font-medium text-green-800">Letter generated successfully!</span>
+                      </div>
+
+                      <pre className="whitespace-pre-wrap font-mono text-sm text-slate-800 bg-white p-6 rounded-lg border border-slate-200 max-h-[400px] overflow-auto mb-4">
+                        {generatedLetter}
+                      </pre>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={downloadLetter}
+                          className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                        >
+                          <Download className="h-5 w-5" />
+                          Download Letter
+                        </button>
+                        <button
+                          onClick={copyGeneratedLetter}
+                          className="flex-1 py-3 border-2 border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition flex items-center justify-center gap-2"
+                        >
+                          {copied ? (
+                            <>
+                              <CheckCircle className="h-5 w-5" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-5 w-5" />
+                              Copy to Clipboard
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setShowPreview(false)}
+                          className="py-3 px-6 border-2 border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -398,7 +803,10 @@ const AdminTemplates: React.FC = () => {
                 </button>
               )}
               <button
-                onClick={() => setSelectedTemplate(null)}
+                onClick={() => {
+                  setSelectedTemplate(null);
+                  resetForm();
+                }}
                 className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
               >
                 Close
