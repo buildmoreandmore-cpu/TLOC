@@ -89,9 +89,6 @@ const Navbar: React.FC = () => {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login" className="text-slate-700 font-semibold px-4 py-2 hover:text-black transition">
-              Client Login
-            </Link>
             <Link to="/contact" className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition active:scale-95">
               Free Consultation
             </Link>
@@ -138,13 +135,6 @@ const Navbar: React.FC = () => {
             ))}
 
             <div className="pt-4 mt-4 border-t border-slate-100 space-y-2">
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center px-4 py-3 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition"
-              >
-                Client Login
-              </Link>
               <Link
                 to="/contact"
                 onClick={() => setMobileMenuOpen(false)}

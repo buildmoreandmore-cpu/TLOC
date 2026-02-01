@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
         { label: 'Home', path: '/' },
         { label: 'Our Services', path: '/services' },
         { label: 'Contact', path: '/contact' },
-        { label: 'Client Portal', path: '/login' },
+        { label: 'Login', path: '/login' },
       ]
     },
     {
