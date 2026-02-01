@@ -26,7 +26,13 @@ export interface DisputeLetter {
   templateId: string;
   content: string;
   createdAt: string;
-  status: 'draft' | 'sent' | 'responded';
+  status: 'needs_notary' | 'ready_to_mail' | 'mailed' | 'awaiting_response' | 'response_received' | 'completed' | 'draft' | 'sent' | 'responded';
+  dateMailed?: string;
+  trackingNumber?: string;
+  bureau?: string;
+  responseDate?: string;
+  responseOutcome?: 'deleted' | 'verified' | 'updated' | 'pending';
+  notes?: string;
 }
 
 export interface Template {

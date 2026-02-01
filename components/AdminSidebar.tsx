@@ -13,7 +13,7 @@ const AdminSidebar: React.FC<Props> = ({ onLogout }) => {
   const menuItems = [
     { label: 'Overview', path: '/dashboard', icon: '📊' },
     { label: 'Clients', path: '/dashboard/clients', icon: '👥' },
-    { label: 'Generated Letters', path: '/dashboard/letters', icon: '✉️' },
+    { label: 'Document Actions', path: '/dashboard/letters', icon: '📋' },
     { label: 'Templates', path: '/dashboard/templates', icon: '📄' },
     { label: 'Credit Building', path: '/dashboard/credit-building', icon: '📈' },
   ];
