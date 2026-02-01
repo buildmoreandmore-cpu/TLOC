@@ -1,7 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DISPUTE_TEMPLATES, BUREAU_ADDRESSES } from '../constants';
-import { Shield, AlertTriangle, Scale, CheckCircle, Copy, X, Mail, FileText, Clock, DollarSign, Plus, Trash2, Download, Send } from 'lucide-react';
+import { Shield, AlertTriangle, Scale, CheckCircle, Copy, X, Mail, FileText, Clock, DollarSign, Download, Send } from 'lucide-react';
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
   COLLECTION: { label: 'Collection', color: 'text-red-700', bgColor: 'bg-red-50' },
@@ -22,40 +22,81 @@ const MAIL_METHOD_CONFIG: Record<string, { label: string; color: string }> = {
   regular_ok: { label: 'Regular Mail OK', color: 'text-green-600' },
 };
 
-const DISPUTE_REASONS = [
-  'This account does not belong to me',
-  'I never authorized this account',
-  'The balance reported is incorrect',
-  'The dates reported are inaccurate',
-  'This account was paid/settled',
-  'This is a duplicate account',
-  'The account status is wrong',
-  'The payment history is inaccurate',
-  'This account was included in bankruptcy',
-  'The creditor name is wrong',
-  'I was a victim of identity theft',
-  'Other (explain in letter)',
-];
+// Field configurations for all possible placeholders
+const FIELD_CONFIG: Record<string, { label: string; placeholder: string; type: string; section: string }> = {
+  // Your Information
+  'CLIENT_NAME': { label: 'Full Name', placeholder: 'John Doe', type: 'text', section: 'Your Information' },
+  'CLIENT_ADDRESS': { label: 'Street Address', placeholder: '123 Main Street', type: 'text', section: 'Your Information' },
+  'CLIENT_CITY': { label: 'City', placeholder: 'Atlanta', type: 'text', section: 'Your Information' },
+  'CLIENT_STATE': { label: 'State', placeholder: 'GA', type: 'text', section: 'Your Information' },
+  'CLIENT_ZIP': { label: 'ZIP Code', placeholder: '30301', type: 'text', section: 'Your Information' },
+  'LAST_4_SSN': { label: 'SSN (Last 4)', placeholder: '1234', type: 'text', section: 'Your Information' },
+  'DOB': { label: 'Date of Birth', placeholder: '01/15/1980', type: 'text', section: 'Your Information' },
+  'DATE_OF_BIRTH': { label: 'Date of Birth', placeholder: '01/15/1980', type: 'text', section: 'Your Information' },
+  'CLIENT_EMAIL': { label: 'Email', placeholder: 'john@example.com', type: 'email', section: 'Your Information' },
+  'CLIENT_PHONE': { label: 'Phone', placeholder: '(555) 123-4567', type: 'tel', section: 'Your Information' },
+  'EMPLOYER_NAME': { label: 'Employer Name', placeholder: 'ABC Company', type: 'text', section: 'Your Information' },
 
-interface DisputedItem {
-  id: string;
-  creditorName: string;
-  accountNumber: string;
-  disputeReason: string;
-}
+  // Bureau Information
+  'BUREAU_NAME': { label: 'Credit Bureau', placeholder: 'Select bureau', type: 'bureau', section: 'Bureau Information' },
 
-interface ClientInfo {
-  fullName: string;
-  streetAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  ssnLast4: string;
-  dob: string;
-  email: string;
-  phone: string;
-  bureau: string;
-}
+  // Creditor/Collector Information
+  'CREDITOR_NAME': { label: 'Creditor Name', placeholder: 'Capital One', type: 'text', section: 'Creditor Information' },
+  'CREDITOR_ADDRESS': { label: 'Creditor Address', placeholder: '123 Creditor St, City, ST 12345', type: 'textarea', section: 'Creditor Information' },
+  'COLLECTOR_NAME': { label: 'Collection Agency Name', placeholder: 'ABC Collections', type: 'text', section: 'Collector Information' },
+  'COLLECTOR_ADDRESS': { label: 'Collector Address', placeholder: '123 Collector St, City, ST 12345', type: 'textarea', section: 'Collector Information' },
+  'ORIGINAL_CREDITOR': { label: 'Original Creditor', placeholder: 'Original bank or company', type: 'text', section: 'Creditor Information' },
+  'COMPANY_NAME': { label: 'Company Name', placeholder: 'Company that made inquiry', type: 'text', section: 'Company Information' },
+  'COMPANY_ADDRESS': { label: 'Company Address', placeholder: '123 Company St, City, ST 12345', type: 'textarea', section: 'Company Information' },
+
+  // Account Information
+  'ACCOUNT_NUMBER': { label: 'Account Number', placeholder: 'XXXX-XXXX-1234', type: 'text', section: 'Account Information' },
+  'BALANCE': { label: 'Balance', placeholder: '$1,234.56', type: 'text', section: 'Account Information' },
+  'CLAIMED_BALANCE': { label: 'Claimed Balance', placeholder: '$1,234.56', type: 'text', section: 'Account Information' },
+  'ACCOUNT_TYPE': { label: 'Account Type', placeholder: 'Credit Card, Auto Loan, etc.', type: 'text', section: 'Account Information' },
+  'DATE_OPENED': { label: 'Date Opened', placeholder: '01/15/2020', type: 'text', section: 'Account Information' },
+  'AMOUNT': { label: 'Amount', placeholder: '$1,234.56', type: 'text', section: 'Account Information' },
+
+  // Dispute Details
+  'CURRENT_REPORTED_INFO': { label: 'What Is Being Reported', placeholder: 'Describe current incorrect info', type: 'textarea', section: 'Dispute Details' },
+  'CORRECT_INFO': { label: 'What Is Accurate', placeholder: 'Describe what should be reported', type: 'textarea', section: 'Dispute Details' },
+  'EXPLANATION': { label: 'Explanation', placeholder: 'Explain the situation...', type: 'textarea', section: 'Dispute Details' },
+  'REPORTED_STATUS': { label: 'Current Reported Status', placeholder: '30 days late, Charge-off, etc.', type: 'text', section: 'Dispute Details' },
+  'SPECIFIC_INACCURACY': { label: 'Specific Inaccuracy', placeholder: 'Describe what is wrong', type: 'textarea', section: 'Dispute Details' },
+  'CORRECT_INFORMATION': { label: 'Correct Information', placeholder: 'What it should say', type: 'textarea', section: 'Dispute Details' },
+  'SPECIFIC_ITEM': { label: 'Specific Item Disputed', placeholder: 'Late payment, balance, etc.', type: 'text', section: 'Dispute Details' },
+
+  // Inquiry Information
+  'INQUIRY_COMPANY': { label: 'Company That Made Inquiry', placeholder: 'Company name', type: 'text', section: 'Inquiry Details' },
+  'INQUIRY_DATE': { label: 'Date of Inquiry', placeholder: '01/15/2024', type: 'text', section: 'Inquiry Details' },
+
+  // Late Payment Information
+  'LATE_PAYMENT_DATES': { label: 'Late Payment Date(s)', placeholder: 'March 2024, April 2024', type: 'text', section: 'Late Payment Details' },
+  'LATE_DATES': { label: 'Late Payment Date(s)', placeholder: 'March 2024, April 2024', type: 'text', section: 'Late Payment Details' },
+
+  // Negotiation
+  'SETTLEMENT_AMOUNT': { label: 'Settlement Amount Offered', placeholder: '$500.00', type: 'text', section: 'Settlement Details' },
+  'GOAL': { label: 'Your Goal', placeholder: 'Purchase a home, refinance, etc.', type: 'text', section: 'Settlement Details' },
+
+  // Re-insertion Violation
+  'ORIGINAL_DISPUTE_DATE': { label: 'Original Dispute Date', placeholder: '01/15/2024', type: 'text', section: 'Re-insertion Timeline' },
+  'DELETION_DATE': { label: 'Date Item Was Deleted', placeholder: '02/15/2024', type: 'text', section: 'Re-insertion Timeline' },
+  'REINSERTION_DISCOVERY_DATE': { label: 'Date You Discovered Re-insertion', placeholder: '04/15/2024', type: 'text', section: 'Re-insertion Timeline' },
+
+  // Method of Verification
+  'DISPUTE_CONFIRMATION_NUMBER': { label: 'Dispute Confirmation Number', placeholder: 'EFX-12345678', type: 'text', section: 'Previous Dispute' },
+  'DATE_OF_RESULTS': { label: 'Date Results Received', placeholder: '01/15/2024', type: 'text', section: 'Previous Dispute' },
+
+  // Identity Theft
+  'POLICE_REPORT_NUMBER': { label: 'Police Report Number', placeholder: '2024-123456', type: 'text', section: 'Identity Theft Details' },
+
+  // Affidavit Fields
+  'CALL_DATE': { label: 'Date of Phone Call', placeholder: '01/15/2024', type: 'text', section: 'Affidavit Details' },
+  'REP_NAME': { label: 'Representative Name', placeholder: 'John from Customer Service', type: 'text', section: 'Affidavit Details' },
+
+  // State placeholder
+  'STATE': { label: 'State', placeholder: 'Georgia', type: 'text', section: 'Your Information' },
+};
 
 const AdminTemplates: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<typeof DISPUTE_TEMPLATES[0] | null>(null);
@@ -63,24 +104,40 @@ const AdminTemplates: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'content' | 'generate' | 'mailing'>('content');
   const [generatedLetter, setGeneratedLetter] = useState<string>('');
   const [showPreview, setShowPreview] = useState(false);
+  const [formData, setFormData] = useState<Record<string, string>>({});
 
-  // Form state
-  const [clientInfo, setClientInfo] = useState<ClientInfo>({
-    fullName: '',
-    streetAddress: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    ssnLast4: '',
-    dob: '',
-    email: '',
-    phone: '',
-    bureau: 'Equifax',
-  });
+  // Extract placeholders from template content
+  const templatePlaceholders = useMemo(() => {
+    if (!selectedTemplate) return [];
+    const regex = /\[([A-Z_]+)\]/g;
+    const matches = selectedTemplate.content.matchAll(regex);
+    const placeholders = new Set<string>();
+    for (const match of matches) {
+      // Skip DATE as it's auto-filled
+      if (match[1] !== 'DATE') {
+        placeholders.add(match[1]);
+      }
+    }
+    return Array.from(placeholders);
+  }, [selectedTemplate]);
 
-  const [disputedItems, setDisputedItems] = useState<DisputedItem[]>([
-    { id: '1', creditorName: '', accountNumber: '', disputeReason: 'This account does not belong to me' }
-  ]);
+  // Group fields by section
+  const groupedFields = useMemo(() => {
+    const groups: Record<string, string[]> = {};
+    templatePlaceholders.forEach(placeholder => {
+      const config = FIELD_CONFIG[placeholder];
+      if (config) {
+        if (!groups[config.section]) {
+          groups[config.section] = [];
+        }
+        // Avoid duplicates (DOB and DATE_OF_BIRTH are same)
+        if (!groups[config.section].some(p => FIELD_CONFIG[p]?.label === config.label)) {
+          groups[config.section].push(placeholder);
+        }
+      }
+    });
+    return groups;
+  }, [templatePlaceholders]);
 
   const copyContent = async () => {
     if (!selectedTemplate) return;
@@ -89,23 +146,8 @@ const AdminTemplates: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const addDisputedItem = () => {
-    setDisputedItems([
-      ...disputedItems,
-      { id: Date.now().toString(), creditorName: '', accountNumber: '', disputeReason: 'This account does not belong to me' }
-    ]);
-  };
-
-  const removeDisputedItem = (id: string) => {
-    if (disputedItems.length > 1) {
-      setDisputedItems(disputedItems.filter(item => item.id !== id));
-    }
-  };
-
-  const updateDisputedItem = (id: string, field: keyof DisputedItem, value: string) => {
-    setDisputedItems(disputedItems.map(item =>
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+  const updateFormData = (key: string, value: string) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
   };
 
   const generateLetter = () => {
@@ -117,45 +159,24 @@ const AdminTemplates: React.FC = () => {
       day: 'numeric'
     });
 
-    // Get bureau address
-    const bureauKey = clientInfo.bureau.toLowerCase().replace(' ', '') as keyof typeof BUREAU_ADDRESSES;
+    // Get bureau address if bureau is selected
+    const bureauKey = (formData['BUREAU_NAME'] || 'equifax').toLowerCase().replace(' ', '') as keyof typeof BUREAU_ADDRESSES;
     const bureauAddress = BUREAU_ADDRESSES[bureauKey] || BUREAU_ADDRESSES.equifax;
 
-    // Build disputed items text
-    const disputedItemsText = disputedItems.map((item, index) => `
-DISPUTED ITEM ${index + 1}:
-Creditor Name: ${item.creditorName || '[CREDITOR_NAME]'}
-Account Number: ${item.accountNumber || '[ACCOUNT_NUMBER]'}
-Reason for Dispute: ${item.disputeReason}
-`).join('\n');
-
     // Replace placeholders in template
-    let letter = selectedTemplate.content
-      .replace(/\[DATE\]/g, today)
-      .replace(/\[CLIENT_NAME\]/g, clientInfo.fullName || '[YOUR NAME]')
-      .replace(/\[CLIENT_ADDRESS\]/g, clientInfo.streetAddress || '[YOUR ADDRESS]')
-      .replace(/\[CLIENT_CITY\]/g, clientInfo.city || '[CITY]')
-      .replace(/\[CLIENT_STATE\]/g, clientInfo.state || '[STATE]')
-      .replace(/\[CLIENT_ZIP\]/g, clientInfo.zipCode || '[ZIP]')
-      .replace(/\[LAST_4_SSN\]/g, clientInfo.ssnLast4 || 'XXXX')
-      .replace(/\[DOB\]/g, clientInfo.dob || '[DATE OF BIRTH]')
-      .replace(/\[DATE_OF_BIRTH\]/g, clientInfo.dob || '[DATE OF BIRTH]')
-      .replace(/\[CLIENT_EMAIL\]/g, clientInfo.email || '[EMAIL]')
-      .replace(/\[CLIENT_PHONE\]/g, clientInfo.phone || '[PHONE]')
-      .replace(/\[BUREAU_NAME\]/g, bureauAddress.name)
-      .replace(/\[BUREAU_ADDRESS\]/g, `${bureauAddress.address}\n${bureauAddress.cityStateZip}`)
-      .replace(/\[CREDITOR_NAME\]/g, disputedItems[0]?.creditorName || '[CREDITOR_NAME]')
-      .replace(/\[ACCOUNT_NUMBER\]/g, disputedItems[0]?.accountNumber || '[ACCOUNT_NUMBER]');
+    let letter = selectedTemplate.content.replace(/\[DATE\]/g, today);
 
-    // If there are multiple disputed items, append them
-    if (disputedItems.length > 1 || disputedItems[0]?.creditorName) {
-      // Find where to insert disputed items section (after MY INFORMATION section if it exists)
-      const myInfoMatch = letter.match(/MY INFORMATION:[\s\S]*?(?=\n\n[A-Z])/);
-      if (myInfoMatch) {
-        const insertIndex = letter.indexOf(myInfoMatch[0]) + myInfoMatch[0].length;
-        letter = letter.slice(0, insertIndex) + '\n' + disputedItemsText + letter.slice(insertIndex);
-      }
-    }
+    // Replace BUREAU placeholders
+    letter = letter
+      .replace(/\[BUREAU_NAME\]/g, bureauAddress.name)
+      .replace(/\[BUREAU_ADDRESS\]/g, `${bureauAddress.address}\n${bureauAddress.cityStateZip}`);
+
+    // Replace all other placeholders with form data
+    templatePlaceholders.forEach(placeholder => {
+      const value = formData[placeholder] || `[${placeholder}]`;
+      const regex = new RegExp(`\\[${placeholder}\\]`, 'g');
+      letter = letter.replace(regex, value);
+    });
 
     setGeneratedLetter(letter);
     setShowPreview(true);
@@ -163,11 +184,11 @@ Reason for Dispute: ${item.disputeReason}
 
   const downloadLetter = () => {
     if (!generatedLetter || !selectedTemplate) return;
-
     const element = document.createElement('a');
     const file = new Blob([generatedLetter], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `${selectedTemplate.name.replace(/\s+/g, '_')}_${clientInfo.fullName.replace(/\s+/g, '_') || 'Letter'}_${new Date().toISOString().split('T')[0]}.txt`;
+    const clientName = formData['CLIENT_NAME'] || 'Client';
+    element.download = `${selectedTemplate.name.replace(/\s+/g, '_')}_${clientName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -180,24 +201,80 @@ Reason for Dispute: ${item.disputeReason}
   };
 
   const resetForm = () => {
-    setClientInfo({
-      fullName: '',
-      streetAddress: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      ssnLast4: '',
-      dob: '',
-      email: '',
-      phone: '',
-      bureau: 'Equifax',
-    });
-    setDisputedItems([
-      { id: '1', creditorName: '', accountNumber: '', disputeReason: 'This account does not belong to me' }
-    ]);
+    setFormData({});
     setGeneratedLetter('');
     setShowPreview(false);
   };
+
+  const renderField = (placeholder: string) => {
+    const config = FIELD_CONFIG[placeholder];
+    if (!config) return null;
+
+    if (config.type === 'bureau') {
+      return (
+        <div key={placeholder}>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{config.label}</label>
+          <select
+            value={formData[placeholder] || 'Equifax'}
+            onChange={(e) => updateFormData(placeholder, e.target.value)}
+            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+          >
+            <option value="Equifax">Equifax</option>
+            <option value="Experian">Experian</option>
+            <option value="TransUnion">TransUnion</option>
+            <option value="Innovis">Innovis</option>
+          </select>
+        </div>
+      );
+    }
+
+    if (config.type === 'textarea') {
+      return (
+        <div key={placeholder} className="col-span-full">
+          <label className="block text-sm font-medium text-slate-700 mb-1">{config.label}</label>
+          <textarea
+            value={formData[placeholder] || ''}
+            onChange={(e) => updateFormData(placeholder, e.target.value)}
+            placeholder={config.placeholder}
+            rows={3}
+            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none resize-none"
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div key={placeholder}>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{config.label}</label>
+        <input
+          type={config.type}
+          value={formData[placeholder] || ''}
+          onChange={(e) => updateFormData(placeholder, e.target.value)}
+          placeholder={config.placeholder}
+          maxLength={placeholder === 'LAST_4_SSN' ? 4 : undefined}
+          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+        />
+      </div>
+    );
+  };
+
+  // Order sections logically
+  const sectionOrder = [
+    'Your Information',
+    'Bureau Information',
+    'Creditor Information',
+    'Collector Information',
+    'Company Information',
+    'Account Information',
+    'Inquiry Details',
+    'Late Payment Details',
+    'Dispute Details',
+    'Previous Dispute',
+    'Re-insertion Timeline',
+    'Identity Theft Details',
+    'Affidavit Details',
+    'Settlement Details',
+  ];
 
   return (
     <div>
@@ -217,7 +294,7 @@ Reason for Dispute: ${item.disputeReason}
           <h3 className="font-bold text-slate-900 mb-1">Your rights are protected by federal law</h3>
           <p className="text-slate-600 text-sm">
             The Fair Credit Reporting Act (FCRA) gives you the right to dispute inaccurate information.
-            These letters cite the exact laws that protect you. Credit bureaus must investigate within 30 days or remove the item.
+            These letters cite the exact laws that protect you.
           </p>
         </div>
       </div>
@@ -233,7 +310,7 @@ Reason for Dispute: ${item.disputeReason}
               key={template.id}
               onClick={() => {
                 setSelectedTemplate(template);
-                setActiveTab('content');
+                setActiveTab('generate');
                 resetForm();
               }}
               className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-blue-200 transition cursor-pointer"
@@ -293,10 +370,7 @@ Reason for Dispute: ${item.disputeReason}
                 <h2 className="text-xl font-bold text-slate-900">{selectedTemplate.name}</h2>
               </div>
               <button
-                onClick={() => {
-                  setSelectedTemplate(null);
-                  resetForm();
-                }}
+                onClick={() => { setSelectedTemplate(null); resetForm(); }}
                 className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition"
               >
                 <X className="h-6 w-6" />
@@ -306,329 +380,74 @@ Reason for Dispute: ${item.disputeReason}
             {/* Tabs */}
             <div className="flex border-b px-6">
               <button
-                onClick={() => setActiveTab('content')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition ${
-                  activeTab === 'content'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                Letter Content
-              </button>
-              <button
                 onClick={() => setActiveTab('generate')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-1.5 ${
-                  activeTab === 'generate'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                  activeTab === 'generate' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <Send className="h-4 w-4" />
                 Generate Letter
               </button>
               <button
+                onClick={() => setActiveTab('content')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition ${
+                  activeTab === 'content' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                View Template
+              </button>
+              <button
                 onClick={() => setActiveTab('mailing')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-1.5 ${
-                  activeTab === 'mailing'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                  activeTab === 'mailing' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <Mail className="h-4 w-4" />
-                Certified Mail Info
+                Mailing Info
               </button>
             </div>
 
             {/* Modal Content */}
             <div className="flex-1 overflow-auto p-6">
-              {activeTab === 'content' ? (
-                <>
-                  {/* Legal Basis & Use Case */}
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-blue-900 mb-1 flex items-center gap-2">
-                        <Scale className="h-4 w-4" />
-                        Legal Basis
-                      </h4>
-                      <p className="text-sm text-blue-700">{selectedTemplate.legalBasis}</p>
-                    </div>
-                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                      <h4 className="text-sm font-bold text-amber-900 mb-1 flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        When to Use
-                      </h4>
-                      <p className="text-sm text-amber-700">{selectedTemplate.useCase}</p>
-                    </div>
-                  </div>
-
-                  {/* Success Rate & Mail Method */}
-                  <div className="flex gap-4 mb-6">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-medium">{selectedTemplate.successRate} Success Rate</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg">
-                      <Mail className="h-4 w-4 text-blue-500" />
-                      <span className={`text-sm font-medium ${MAIL_METHOD_CONFIG[selectedTemplate.mailMethod].color}`}>
-                        {MAIL_METHOD_CONFIG[selectedTemplate.mailMethod].label}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Attachments if any */}
-                  {selectedTemplate.attachments && (
-                    <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 mb-6">
-                      <h4 className="text-sm font-bold text-purple-900 mb-2">Required Attachments</h4>
-                      <ul className="text-sm text-purple-700 space-y-1">
-                        {selectedTemplate.attachments.map((att, i) => (
-                          <li key={i} className="flex items-center gap-2">
-                            <FileText className="h-3.5 w-3.5" />
-                            {att}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Re-Insertion Guide - Only show for reinsertion_violation template */}
-                  {selectedTemplate.id === 'reinsertion_violation' && (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
-                      <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
-                        <DollarSign className="h-5 w-5" />
-                        Does Your Client Have a Re-Insertion Case? ($1,000 Potential)
-                      </h4>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                          <div>
-                            <p className="font-medium text-green-800">Did they dispute an item in the past?</p>
-                            <p className="text-green-600">Could be a collection, charge-off, late payment, inquiry, or any negative item</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                          <div>
-                            <p className="font-medium text-green-800">Was the item successfully deleted/removed?</p>
-                            <p className="text-green-600">Check for deletion confirmation letter or if item disappeared from report</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-                          <div>
-                            <p className="font-medium text-green-800">Is that same item back on their credit report now?</p>
-                            <p className="text-green-600">Pull current credit report and check if the item reappeared</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
-                          <div>
-                            <p className="font-medium text-green-800">Did they receive written notice within 5 days?</p>
-                            <p className="text-green-600">Bureaus MUST notify within 5 business days of re-inserting</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 p-3 bg-green-100 rounded-lg">
-                        <p className="font-bold text-green-900">
-                          If YES to #1-3 and NO to #4 = <span className="text-green-700">$1,000 VIOLATION CASE!</span>
-                        </p>
-                        <p className="text-sm text-green-700 mt-1">
-                          The bureau re-inserted the item WITHOUT proper notice. This is an automatic FCRA § 611 violation entitling your client to statutory damages.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Placeholder Notice */}
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Placeholders:</strong> Replace text in [BRACKETS] with actual client information when generating letters.
-                    </p>
-                  </div>
-
-                  {/* Letter Content */}
-                  <pre className="whitespace-pre-wrap font-mono text-sm text-slate-800 bg-slate-50 p-6 rounded-lg border border-slate-200 max-h-[400px] overflow-auto">
-                    {selectedTemplate.content}
-                  </pre>
-                </>
-              ) : activeTab === 'generate' ? (
+              {activeTab === 'generate' ? (
                 <>
                   {!showPreview ? (
-                    <>
-                      {/* Your Information Section */}
-                      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">Your Information</h3>
-                        <p className="text-sm text-slate-500 mb-6">This will appear on your letter</p>
+                    <div className="space-y-6">
+                      {/* Dynamic Form Sections */}
+                      {sectionOrder.map(section => {
+                        const fields = groupedFields[section];
+                        if (!fields || fields.length === 0) return null;
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                            <input
-                              type="text"
-                              value={clientInfo.fullName}
-                              onChange={(e) => setClientInfo({...clientInfo, fullName: e.target.value})}
-                              placeholder="John Doe"
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Credit Bureau</label>
-                            <select
-                              value={clientInfo.bureau}
-                              onChange={(e) => setClientInfo({...clientInfo, bureau: e.target.value})}
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
-                            >
-                              <option value="Equifax">Equifax</option>
-                              <option value="Experian">Experian</option>
-                              <option value="TransUnion">TransUnion</option>
-                              <option value="Innovis">Innovis</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="mt-4">
-                          <label className="block text-sm font-medium text-slate-700 mb-1">Street Address</label>
-                          <input
-                            type="text"
-                            value={clientInfo.streetAddress}
-                            onChange={(e) => setClientInfo({...clientInfo, streetAddress: e.target.value})}
-                            placeholder="123 Main Street"
-                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4 mt-4">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
-                            <input
-                              type="text"
-                              value={clientInfo.city}
-                              onChange={(e) => setClientInfo({...clientInfo, city: e.target.value})}
-                              placeholder="Atlanta"
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
-                            <input
-                              type="text"
-                              value={clientInfo.state}
-                              onChange={(e) => setClientInfo({...clientInfo, state: e.target.value})}
-                              placeholder="GA"
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">ZIP Code</label>
-                            <input
-                              type="text"
-                              value={clientInfo.zipCode}
-                              onChange={(e) => setClientInfo({...clientInfo, zipCode: e.target.value})}
-                              placeholder="30301"
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">SSN (Last 4)</label>
-                            <input
-                              type="text"
-                              maxLength={4}
-                              value={clientInfo.ssnLast4}
-                              onChange={(e) => setClientInfo({...clientInfo, ssnLast4: e.target.value.replace(/\D/g, '').slice(0, 4)})}
-                              placeholder="1234"
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-                            <input
-                              type="text"
-                              value={clientInfo.dob}
-                              onChange={(e) => setClientInfo({...clientInfo, dob: e.target.value})}
-                              placeholder="01/15/1980"
-                              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Disputed Items Section */}
-                      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">Disputed Items</h3>
-                        <p className="text-sm text-slate-500 mb-6">Add the accounts or items to dispute</p>
-
-                        {disputedItems.map((item, index) => (
-                          <div key={item.id} className="border border-slate-200 rounded-lg p-4 mb-4">
-                            <div className="flex justify-between items-center mb-4">
-                              <h4 className="font-semibold text-slate-800">Item {index + 1}</h4>
-                              {disputedItems.length > 1 && (
-                                <button
-                                  onClick={() => removeDisputedItem(item.id)}
-                                  className="text-red-500 hover:text-red-700 p-1"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                              <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Creditor Name</label>
-                                <input
-                                  type="text"
-                                  value={item.creditorName}
-                                  onChange={(e) => updateDisputedItem(item.id, 'creditorName', e.target.value)}
-                                  placeholder="e.g., ABC Collections"
-                                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Account Number</label>
-                                <input
-                                  type="text"
-                                  value={item.accountNumber}
-                                  onChange={(e) => updateDisputedItem(item.id, 'accountNumber', e.target.value)}
-                                  placeholder="e.g., XXXX1234"
-                                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                                />
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Dispute Reason</label>
-                              <select
-                                value={item.disputeReason}
-                                onChange={(e) => updateDisputedItem(item.id, 'disputeReason', e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
-                              >
-                                {DISPUTE_REASONS.map(reason => (
-                                  <option key={reason} value={reason}>{reason}</option>
-                                ))}
-                              </select>
+                        return (
+                          <div key={section} className="bg-white border border-slate-200 rounded-xl p-6">
+                            <h3 className="text-lg font-bold text-slate-900 mb-4">{section}</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {fields.map(renderField)}
                             </div>
                           </div>
-                        ))}
+                        );
+                      })}
 
-                        <button
-                          onClick={addDisputedItem}
-                          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add Another Dispute
-                        </button>
+                      {/* Legal Basis Info */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                          <Scale className="h-5 w-5 text-blue-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-bold text-blue-900">Legal Basis</h4>
+                            <p className="text-sm text-blue-700">{selectedTemplate.legalBasis}</p>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Generate Button */}
                       <button
                         onClick={generateLetter}
-                        className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2"
                       >
                         <Send className="h-5 w-5" />
-                        Create Letter
+                        Generate Letter
                       </button>
-                    </>
+                    </div>
                   ) : (
                     <>
                       {/* Preview Generated Letter */}
@@ -644,26 +463,16 @@ Reason for Dispute: ${item.disputeReason}
                       <div className="flex gap-3">
                         <button
                           onClick={downloadLetter}
-                          className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                          className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2"
                         >
                           <Download className="h-5 w-5" />
-                          Download Letter
+                          Download
                         </button>
                         <button
                           onClick={copyGeneratedLetter}
                           className="flex-1 py-3 border-2 border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition flex items-center justify-center gap-2"
                         >
-                          {copied ? (
-                            <>
-                              <CheckCircle className="h-5 w-5" />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-5 w-5" />
-                              Copy to Clipboard
-                            </>
-                          )}
+                          {copied ? <><CheckCircle className="h-5 w-5" /> Copied!</> : <><Copy className="h-5 w-5" /> Copy</>}
                         </button>
                         <button
                           onClick={() => setShowPreview(false)}
@@ -675,73 +484,74 @@ Reason for Dispute: ${item.disputeReason}
                     </>
                   )}
                 </>
+              ) : activeTab === 'content' ? (
+                <>
+                  <div className="grid md:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-blue-900 mb-1 flex items-center gap-2">
+                        <Scale className="h-4 w-4" /> Legal Basis
+                      </h4>
+                      <p className="text-sm text-blue-700">{selectedTemplate.legalBasis}</p>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                      <h4 className="text-sm font-bold text-amber-900 mb-1 flex items-center gap-2">
+                        <Clock className="h-4 w-4" /> When to Use
+                      </h4>
+                      <p className="text-sm text-amber-700">{selectedTemplate.useCase}</p>
+                    </div>
+                  </div>
+
+                  {selectedTemplate.attachments && (
+                    <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 mb-6">
+                      <h4 className="text-sm font-bold text-purple-900 mb-2">Required Attachments</h4>
+                      <ul className="text-sm text-purple-700 space-y-1">
+                        {selectedTemplate.attachments.map((att, i) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <FileText className="h-3.5 w-3.5" /> {att}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <pre className="whitespace-pre-wrap font-mono text-sm text-slate-800 bg-slate-50 p-6 rounded-lg border border-slate-200 max-h-[400px] overflow-auto">
+                    {selectedTemplate.content}
+                  </pre>
+                </>
               ) : (
                 <>
-                  {/* Certified Mail Instructions */}
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6">
                     <h4 className="font-bold text-blue-900 mb-2">Certified Mail Instructions</h4>
                     <ul className="text-sm text-blue-700 space-y-2">
-                      <li>• Send all dispute letters via <strong>USPS Certified Mail with Return Receipt Requested</strong></li>
-                      <li>• Keep a copy of the letter and the certified mail receipt for your records</li>
+                      <li>• Send via <strong>USPS Certified Mail with Return Receipt Requested</strong></li>
+                      <li>• Keep a copy of the letter and receipt for your records</li>
                       <li>• The return receipt (green card) provides proof of delivery</li>
-                      <li>• Tracking number format: 9407 3000 0000 0000 0000 00</li>
                     </ul>
                   </div>
 
-                  {/* Mailing Cost Breakdown */}
                   <div className="bg-green-50 border border-green-100 rounded-lg p-4 mb-6">
-                    <h4 className="font-bold text-green-900 mb-3">USPS Certified Mail Cost Breakdown</h4>
-                    <div className="grid md:grid-cols-3 gap-4 text-sm">
-                      <div className="bg-white p-3 rounded border border-green-200">
-                        <p className="font-medium text-green-800">Certified Mail Fee</p>
-                        <p className="text-2xl font-bold text-green-700">$4.10</p>
+                    <h4 className="font-bold text-green-900 mb-3">USPS Cost Breakdown</h4>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="bg-white p-3 rounded border border-green-200 text-center">
+                        <p className="font-medium text-green-800">Certified</p>
+                        <p className="text-xl font-bold text-green-700">$4.10</p>
                       </div>
-                      <div className="bg-white p-3 rounded border border-green-200">
+                      <div className="bg-white p-3 rounded border border-green-200 text-center">
                         <p className="font-medium text-green-800">Return Receipt</p>
-                        <p className="text-2xl font-bold text-green-700">$3.35</p>
+                        <p className="text-xl font-bold text-green-700">$3.35</p>
                       </div>
-                      <div className="bg-white p-3 rounded border border-green-200">
-                        <p className="font-medium text-green-800">First-Class Postage</p>
-                        <p className="text-2xl font-bold text-green-700">$0.68</p>
+                      <div className="bg-white p-3 rounded border border-green-200 text-center">
+                        <p className="font-medium text-green-800">Postage</p>
+                        <p className="text-xl font-bold text-green-700">$0.68</p>
                       </div>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-green-200 flex justify-between items-center">
-                      <span className="font-bold text-green-900">Total per letter:</span>
+                    <div className="mt-3 pt-3 border-t border-green-200 flex justify-between">
+                      <span className="font-bold text-green-900">Total:</span>
                       <span className="text-xl font-bold text-green-700">~$8.13</span>
                     </div>
-                    <p className="text-xs text-green-600 mt-2">* Prices as of 2024 - rates may vary</p>
                   </div>
 
-                  {/* When to Use Certified Mail */}
-                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-6">
-                    <h4 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      When to Use Certified Mail
-                    </h4>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex gap-3">
-                        <div className="w-28 font-bold text-red-700">ALWAYS</div>
-                        <div className="flex-1 text-amber-700">
-                          When demanding money ($1,000 damages), for identity theft cases, re-insertion violations, or if you might file a CFPB complaint or lawsuit
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="w-28 font-bold text-yellow-700">RECOMMENDED</div>
-                        <div className="flex-1 text-amber-700">
-                          For bureau disputes and method of verification requests - creates paper trail
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="w-28 font-bold text-green-700">OPTIONAL</div>
-                        <div className="flex-1 text-amber-700">
-                          For goodwill requests and simple creditor disputes without damage claims
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bureau Addresses */}
-                  <h4 className="text-lg font-bold text-slate-900 mb-4">Credit Bureau Mailing Addresses</h4>
+                  <h4 className="text-lg font-bold text-slate-900 mb-4">Bureau Addresses</h4>
                   <div className="grid md:grid-cols-2 gap-4">
                     {Object.entries(BUREAU_ADDRESSES).map(([key, bureau]) => (
                       <div key={key} className="bg-white border border-slate-200 rounded-lg p-4">
@@ -750,33 +560,14 @@ Reason for Dispute: ${item.disputeReason}
                         <p className="text-sm text-slate-600">{bureau.cityStateZip}</p>
                         <button
                           onClick={async () => {
-                            const fullAddress = `${bureau.name}\n${bureau.address}\n${bureau.cityStateZip}`;
-                            await navigator.clipboard.writeText(fullAddress);
+                            await navigator.clipboard.writeText(`${bureau.name}\n${bureau.address}\n${bureau.cityStateZip}`);
                           }}
                           className="mt-3 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                         >
-                          <Copy className="h-3 w-3" />
-                          Copy address
+                          <Copy className="h-3 w-3" /> Copy
                         </button>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Tracking Number Placeholder */}
-                  <div className="mt-6 bg-slate-50 border border-slate-200 rounded-lg p-4">
-                    <h4 className="font-bold text-slate-900 mb-3">Record Tracking Numbers</h4>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {Object.keys(BUREAU_ADDRESSES).map((key) => (
-                        <div key={key}>
-                          <label className="text-xs text-slate-500 mb-1 block capitalize">{key} Tracking #</label>
-                          <input
-                            type="text"
-                            placeholder="9407 3000 0000 0000 0000 00"
-                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                          />
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </>
               )}
@@ -789,24 +580,11 @@ Reason for Dispute: ${item.disputeReason}
                   onClick={copyContent}
                   className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition"
                 >
-                  {copied ? (
-                    <>
-                      <CheckCircle className="h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      Copy Template
-                    </>
-                  )}
+                  {copied ? <><CheckCircle className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy Template</>}
                 </button>
               )}
               <button
-                onClick={() => {
-                  setSelectedTemplate(null);
-                  resetForm();
-                }}
+                onClick={() => { setSelectedTemplate(null); resetForm(); }}
                 className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
               >
                 Close
