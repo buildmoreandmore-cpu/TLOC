@@ -758,6 +758,195 @@ _______________________________
 Enclosures:
 • Supporting documentation
 • Copy of credit report showing inaccurate information`
+  },
+  {
+    id: 'opt_out_letter',
+    name: 'Opt-Out Letter',
+    category: 'CREDITOR_DISPUTE',
+    description: 'Exercise your privacy rights under 15 U.S.C. § 6802(b) to stop creditors from sharing your nonpublic personal information.',
+    legalBasis: '15 U.S.C. § 6802(b) - Gramm-Leach-Bliley Act',
+    useCase: 'Use when you want to stop a creditor from sharing your personal information with third parties or for marketing purposes. Also useful for requesting account status be updated to "Paid as Agreed".',
+    mailMethod: 'regular_ok',
+    successRate: 'Medium',
+    content: `[DATE]
+
+[CLIENT_NAME]
+[CLIENT_ADDRESS]
+[CLIENT_CITY], [CLIENT_STATE] [CLIENT_ZIP]
+
+[CREDITOR_NAME]
+[CREDITOR_ADDRESS]
+
+RE: Opt-Out Request Pursuant to 15 U.S. Code § 6802(b)
+
+Dear Sir/Madam:
+
+I am writing to exercise my right to opt-out of the sharing and utilization of my nonpublic personal information, as provided for under 15 U.S. Code § 6802(b). This letter serves as formal notification of my request that your institution cease using or sharing my personal information for any purpose beyond the necessary servicing of my account.
+
+ACCOUNT INFORMATION:
+Account Number: [ACCOUNT_NUMBER]
+Account Holder: [CLIENT_NAME]
+
+I HEREBY REQUEST THAT YOU:
+
+1. Cease sharing my nonpublic personal information with any nonaffiliated third parties
+
+2. Remove my information from any marketing lists or databases shared with other companies
+
+3. Stop using my information for any purpose other than servicing my existing account
+
+4. Update my account status to reflect "Paid as Agreed" moving forward (if applicable)
+
+5. Provide written confirmation of this opt-out request within 10 days
+
+LEGAL BASIS:
+
+Under 15 U.S.C. § 6802(b), financial institutions must provide consumers with the opportunity to opt-out of the sharing of nonpublic personal information with nonaffiliated third parties. I am exercising this right.
+
+Please confirm receipt of this request in writing within 10 days of receiving this letter, as well as the steps your institution will take to ensure compliance with this opt-out request.
+
+Sincerely,
+
+
+
+_______________________________
+[CLIENT_NAME]
+[CLIENT_ADDRESS]`
+  },
+  {
+    id: 'identity_affidavit',
+    name: 'Affidavit of Identity & Correction Request',
+    category: 'IDENTITY_THEFT',
+    description: 'Sworn affidavit to correct personal information mismatches on credit reports. Use when bureaus have wrong name, address, or other identifying information.',
+    legalBasis: 'FCRA § 611, § 623 - Accuracy of Consumer Reports',
+    useCase: 'Use when credit bureaus or furnishers are reporting personal information that does not match your government-issued identification. This notarized affidavit demands correction of your identifying information.',
+    mailMethod: 'certified_required',
+    successRate: 'High',
+    attachments: ['Government-issued photo ID', 'Proof of current address', 'Social Security card (optional)'],
+    content: `═══════════════════════════════════════════════════════════════════════
+                    AFFIDAVIT OF IDENTITY & CORRECTION REQUEST
+═══════════════════════════════════════════════════════════════════════
+
+                         Affidavit of [CLIENT_NAME]
+
+              I, [CLIENT_NAME], being duly sworn, declare:
+
+
+1. I am a natural person domiciled in [CLIENT_CITY], [CLIENT_STATE].
+
+2. I am the individual associated with the consumer file identified by
+   SSN ending in [LAST_4_SSN] and DOB [DATE_OF_BIRTH].
+
+3. The consumer reporting agencies and/or furnishers are reporting personal
+   information that does not match my government-issued identification.
+
+4. The correct identifying information is:
+
+   - Full Legal Name: [CLIENT_NAME]
+   - Current Address: [CLIENT_ADDRESS], [CLIENT_CITY], [CLIENT_STATE] [CLIENT_ZIP]
+   - Date of Birth: [DATE_OF_BIRTH]
+   - Employer: [EMPLOYER_NAME]
+
+5. I hereby swear under penalty of perjury that the enclosed documents
+   reflect my true and accurate information.
+
+6. I demand that the consumer reporting agencies and furnishers correct
+   all reporting immediately to reflect this information.
+
+
+
+Signed: _____________________________     Date: _____________________________
+
+Printed Name: [CLIENT_NAME]
+
+
+
+═══════════════════════════════════════════════════════════════════════
+                         NOTARY ACKNOWLEDGMENT
+═══════════════════════════════════════════════════════════════════════
+
+State of _______________
+County of ______________
+
+Subscribed and sworn before me this _____ day of _____________, 20___
+by [CLIENT_NAME].
+
+
+
+Notary Public: _____________________________
+
+My Commission Expires: _____________________________
+
+
+
+                            [NOTARY SEAL]`
+  },
+  {
+    id: 'late_payment_affidavit',
+    name: 'Sworn Affidavit - Unverifiable Late Payment',
+    category: 'LATE_PAYMENT',
+    description: 'Notarized sworn statement declaring that a creditor cannot verify late payment reporting. Powerful evidence when combined with creditor dispute.',
+    legalBasis: 'FCRA § 1681e(b), § 1681i - Maximum Possible Accuracy',
+    useCase: 'Use after speaking with a creditor who admits they cannot verify late payment dates. Document the call details (date, representative name) and submit this notarized affidavit to bureaus.',
+    mailMethod: 'certified_required',
+    successRate: 'High',
+    attachments: ['Notes from phone call with creditor', 'Credit report showing inconsistent reporting'],
+    content: `═══════════════════════════════════════════════════════════════════════
+      SWORN AFFIDAVIT - UNVERIFIABLE/MISLEADING LATE-PAYMENT REPORTING
+═══════════════════════════════════════════════════════════════════════
+
+                I, [CLIENT_NAME], being duly sworn, declare:
+
+
+1. I am the natural person associated with [CREDITOR_NAME] account
+   [ACCOUNT_NUMBER]; DOB [DATE_OF_BIRTH], SSN last 4: [LAST_4_SSN].
+
+2. On [CALL_DATE], I spoke with [CREDITOR_NAME], and a representative
+   named [REP_NAME] stated that "their system is unable to go back far
+   enough to verify the reporting in question."
+
+3. Because the late-payment entry/entries cannot be verified by the
+   furnisher, they are UNVERIFIABLE AND MISLEADING for credit reporting
+   purposes.
+
+4. The late-payment reporting has been INCONSISTENT ACROSS EQUIFAX,
+   EXPERIAN, AND TRANSUNION, which violates FCRA's "maximum possible
+   accuracy" standard.
+
+5. I request and affirm that any such unverifiable late-payment
+   entry/entries must be DELETED OR CORRECTED across all CRAs, and that
+   [CREDITOR_NAME] must CEASE FURNISHING unverifiable information.
+
+6. I affirm that the foregoing statements are true and correct to the
+   best of my knowledge.
+
+
+
+Signature: _____________________________     Date: _____________________________
+
+[CLIENT_NAME]
+
+
+
+═══════════════════════════════════════════════════════════════════════
+                         NOTARY ACKNOWLEDGMENT
+═══════════════════════════════════════════════════════════════════════
+
+State of _______________
+County of ______________
+
+Subscribed and sworn before me this _____ day of _____________, 20___
+by [CLIENT_NAME].
+
+
+
+Notary Public: _____________________________
+
+My Commission Expires: _____________________________
+
+
+
+                            [NOTARY SEAL]`
   }
 ];
 
