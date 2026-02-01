@@ -24,15 +24,20 @@ interface AnalysisResult {
   summary: string;
 }
 
-// Default prices for letter types
-const LETTER_PRICES = [
-  { label: 'Basic Letter', price: 25 },
-  { label: 'Standard Letter', price: 50 },
-  { label: 'Advanced Letter', price: 75 },
-  { label: 'Premium Letter', price: 100 },
-  { label: 'Violation Letter', price: 150 },
-  { label: 'Custom', price: 0 },
-];
+// Prices based on credit repair type
+const LETTER_PRICES: Record<string, { label: string; price: number }> = {
+  'COLLECTION': { label: 'Collection Dispute', price: 75 },
+  'BUREAU_DISPUTE': { label: 'Bureau Dispute', price: 50 },
+  'IDENTITY_THEFT': { label: 'Identity Theft', price: 100 },
+  'GOODWILL': { label: 'Goodwill Letter', price: 35 },
+  'NEGOTIATION': { label: 'Debt Negotiation', price: 75 },
+  'FOLLOW_UP': { label: 'Follow-Up Letter', price: 25 },
+  'VIOLATION': { label: 'FCRA Violation', price: 150 },
+  'INQUIRY': { label: 'Inquiry Removal', price: 50 },
+  'LATE_PAYMENT': { label: 'Late Payment Dispute', price: 50 },
+  'CREDITOR_DISPUTE': { label: 'Creditor Dispute', price: 65 },
+  'CUSTOM': { label: 'Custom Price', price: 0 },
+};
 
 const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setLetters }) => {
   const { id } = useParams();
@@ -44,7 +49,7 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
   const [previewLetter, setPreviewLetter] = useState('');
 
   // Pricing state
-  const [selectedPriceOption, setSelectedPriceOption] = useState('Standard Letter');
+  const [useCustomPrice, setUseCustomPrice] = useState(false);
   const [customPrice, setCustomPrice] = useState('');
   const [letterPrice, setLetterPrice] = useState(50);
 
@@ -55,12 +60,28 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
   const [reportText, setReportText] = useState('');
   const [dragActive, setDragActive] = useState(false);
 
-  // Update letter price when option changes
-  const handlePriceOptionChange = (option: string) => {
-    setSelectedPriceOption(option);
-    if (option !== 'Custom') {
-      const priceObj = LETTER_PRICES.find(p => p.label === option);
-      setLetterPrice(priceObj?.price || 50);
+  // Get price based on selected template category
+  const getTemplatePrice = (templateId: string) => {
+    const template = DISPUTE_TEMPLATES.find(t => t.id === templateId);
+    if (template) {
+      const priceInfo = LETTER_PRICES[template.category];
+      return priceInfo?.price || 50;
+    }
+    return 50;
+  };
+
+  // Update price when template changes
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    if (!useCustomPrice) {
+      setLetterPrice(getTemplatePrice(templateId));
+    }
+  };
+
+  const handleCustomPriceToggle = (useCustom: boolean) => {
+    setUseCustomPrice(useCustom);
+    if (!useCustom && selectedTemplate) {
+      setLetterPrice(getTemplatePrice(selectedTemplate));
       setCustomPrice('');
     }
   };
@@ -457,83 +478,90 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
               <p className="text-sm text-slate-500 mb-4">Based on the credit report analysis, we recommend these dispute letters:</p>
 
               <div className="space-y-3">
-                {analysisResult.recommendedTemplates.map((template) => (
-                  <label
-                    key={template.id}
-                    className={`block p-4 border-2 rounded-xl cursor-pointer transition ${
-                      selectedTemplate === template.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-slate-200 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <input
-                        type="radio"
-                        name="template"
-                        value={template.id}
-                        checked={selectedTemplate === template.id}
-                        onChange={(e) => setSelectedTemplate(e.target.value)}
-                        className="mt-1 w-5 h-5"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-slate-900">{template.name}</span>
-                          {template.potentialDamages && (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-semibold">
-                              ${template.potentialDamages} potential
+                {analysisResult.recommendedTemplates.map((template) => {
+                  const priceInfo = LETTER_PRICES[template.category];
+                  return (
+                    <label
+                      key={template.id}
+                      className={`block p-4 border-2 rounded-xl cursor-pointer transition ${
+                        selectedTemplate === template.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <input
+                          type="radio"
+                          name="template"
+                          value={template.id}
+                          checked={selectedTemplate === template.id}
+                          onChange={(e) => handleTemplateSelect(e.target.value)}
+                          className="mt-1 w-5 h-5"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-slate-900">{template.name}</span>
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold">
+                              ${priceInfo?.price || 50}
                             </span>
-                          )}
+                            {template.potentialDamages && (
+                              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-semibold">
+                                ${template.potentialDamages} potential
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-500 mb-2">{template.description}</p>
+                          <p className="text-xs text-blue-600 font-medium">{template.legalBasis}</p>
                         </div>
-                        <p className="text-sm text-slate-500 mb-2">{template.description}</p>
-                        <p className="text-xs text-blue-600 font-medium">{template.legalBasis}</p>
                       </div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
               </div>
 
               {/* Pricing Section */}
               <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <h4 className="font-bold text-slate-800 mb-3">Letter Pricing</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1">Price Tier</label>
-                    <select
-                      value={selectedPriceOption}
-                      onChange={(e) => handlePriceOptionChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
-                    >
-                      {LETTER_PRICES.map((option) => (
-                        <option key={option.label} value={option.label}>
-                          {option.label} {option.price > 0 ? `($${option.price})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1">
-                      {selectedPriceOption === 'Custom' ? 'Enter Price' : 'Price'}
-                    </label>
-                    {selectedPriceOption === 'Custom' ? (
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
-                        <input
-                          type="number"
-                          value={customPrice}
-                          onChange={(e) => handleCustomPriceChange(e.target.value)}
-                          placeholder="0.00"
-                          min="0"
-                          step="0.01"
-                          className="w-full pl-7 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-                        />
-                      </div>
-                    ) : (
-                      <div className="px-3 py-2 bg-green-100 text-green-800 font-bold rounded-lg text-center">
-                        ${letterPrice.toFixed(2)}
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-slate-800">Letter Pricing</h4>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useCustomPrice}
+                      onChange={(e) => handleCustomPriceToggle(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300"
+                    />
+                    <span className="text-slate-600">Custom price</span>
+                  </label>
                 </div>
+
+                {useCustomPrice ? (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1">Enter Custom Price</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                      <input
+                        type="number"
+                        value={customPrice}
+                        onChange={(e) => handleCustomPriceChange(e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        className="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
+                    <div>
+                      <p className="text-sm text-slate-600">
+                        {selectedTemplate ? LETTER_PRICES[DISPUTE_TEMPLATES.find(t => t.id === selectedTemplate)?.category || '']?.label || 'Select a letter' : 'Select a letter type'}
+                      </p>
+                    </div>
+                    <div className="text-2xl font-black text-green-600">
+                      ${letterPrice.toFixed(2)}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
