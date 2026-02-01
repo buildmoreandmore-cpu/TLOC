@@ -328,7 +328,7 @@ const AdminTemplates: React.FC = () => {
               </div>
 
               <h3 className="font-bold text-slate-900 mb-2">{template.name}</h3>
-              <p className="text-sm text-slate-500 mb-4 min-h-[3rem] line-clamp-2">{template.description}</p>
+              <p className="text-sm text-slate-500 mb-4">{template.description}</p>
 
               <div className="flex items-center gap-2 mb-3">
                 <Scale className="h-3.5 w-3.5 text-blue-600" />
