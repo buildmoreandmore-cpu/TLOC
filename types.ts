@@ -40,3 +40,10 @@ export interface AppState {
   clients: Client[];
   letters: DisputeLetter[];
 }
+
+export interface SnowballPlan {
+  month: string;
+  action: string;
+  focusDebt: string;
+  estimatedRemainingTotal: number;
+}

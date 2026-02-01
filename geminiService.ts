@@ -57,3 +57,33 @@ export const generateDisputeLetter = async (clientName: string, negativeItems: a
 
   return response.text;
 };
+
+export const generateDebtSnowballPlan = async (debts: any[]) => {
+  const prompt = `Based on the following list of debts: ${JSON.stringify(debts)}, generate a "Debt Snowball" payoff plan. 
+  The debt snowball method involves paying off the smallest debts first to build momentum.
+  Provide a month-by-month plan for the first 6 months. Include which debt to focus on and a motivational tip for each month.`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      systemInstruction: "You are a world-class financial advisor specializing in debt elimination. You help people find freedom through intentional budgeting and the snowball method. Return a clean JSON array of plan steps.",
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            month: { type: Type.STRING },
+            action: { type: Type.STRING },
+            focusDebt: { type: Type.STRING },
+            estimatedRemainingTotal: { type: Type.NUMBER }
+          },
+          required: ["month", "action", "focusDebt", "estimatedRemainingTotal"]
+        }
+      }
+    }
+  });
+
+  return JSON.parse(response.text.trim());
+};

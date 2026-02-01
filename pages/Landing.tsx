@@ -1,89 +1,94 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { IconProduct, IconDigital, IconSoftware, IconStartup } from '../components/Icons';
 
 const Landing: React.FC = () => {
   return (
-    <div className="bg-white">
+    <div className="bg-white min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight mb-6">
-                Your Credit Score Is a Reflection of Your Credit Report... <br/>
-                <span className="text-blue-600">Let's Fix That</span>
+      <section className="relative pt-24 pb-32 overflow-hidden hero-gradient">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
+            <div className="lg:col-span-6 z-10">
+              <h1 className="text-6xl md:text-8xl font-black text-black leading-[0.9] tracking-tighter mb-8">
+                Your company's operating system
               </h1>
-              <p className="text-xl text-slate-600 mb-8 max-w-lg">
-                Stop living with bad credit. At Three Level of Credit, we use aggressive legal strategies to remove inaccuracies from your credit report and boost your scores fast.
+              <p className="text-2xl text-slate-600 mb-10 max-w-xl leading-relaxed">
+                Three Level of Credit is a work platform that replaces scattered tools and connects teams. Chosen by nerds, appreciated by everyone.*
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/contact" className="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition text-center">
-                  Start Your Consultation
+              <div className="flex flex-wrap items-center gap-6">
+                <Link to="/contact" className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl hover:bg-blue-700 transition active:scale-95 shadow-xl shadow-blue-100">
+                  Sign up for free
                 </Link>
-                <Link to="/services" className="px-8 py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-lg font-bold text-lg hover:bg-blue-50 transition text-center">
-                  See How We Help
+                <Link to="/services" className="px-6 py-4 text-blue-600 font-bold text-xl hover:opacity-70 transition">
+                  Book a demo
                 </Link>
               </div>
             </div>
-            <div className="mt-12 lg:mt-0 flex justify-center">
-              <img 
-                src="https://images.unsplash.com/photo-1554224155-169641357599?auto=format&fit=crop&q=80&w=600&h=400" 
-                alt="Credit Freedom" 
-                className="rounded-2xl shadow-2xl rotate-2"
-              />
+            <div className="lg:col-span-6 mt-16 lg:mt-0 relative">
+              <div className="relative z-10 scale-110 translate-x-8">
+                <img 
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800&h=600" 
+                  alt="Interface Preview" 
+                  className="rounded-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-slate-100"
+                />
+              </div>
+              <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50 -z-1"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-slate-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-4xl font-bold text-blue-600">10k+</p>
-              <p className="text-slate-600">Items Removed</p>
+      {/* Feature Cards - Fibery Style */}
+      <section className="pb-32 -mt-16 relative z-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-[#fcf7f2] p-8 rounded-[2rem] card-shadow border border-white hover:-translate-y-2 transition duration-300">
+              <div className="mb-8"><IconProduct /></div>
+              <h3 className="text-2xl font-black mb-2">Product</h3>
+              <p className="text-slate-500 text-sm">10k+ Items Removed</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold text-blue-600">95%</p>
-              <p className="text-slate-600">Success Rate</p>
+            <div className="bg-[#f7f2fc] p-8 rounded-[2rem] card-shadow border border-white hover:-translate-y-2 transition duration-300">
+              <div className="mb-8"><IconDigital /></div>
+              <h3 className="text-2xl font-black mb-2">Digital agency</h3>
+              <p className="text-slate-500 text-sm">95% Success Rate</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold text-blue-600">45</p>
-              <p className="text-slate-600">Avg. Score Boost</p>
+            <div className="bg-[#f2f7fc] p-8 rounded-[2rem] card-shadow border border-white hover:-translate-y-2 transition duration-300">
+              <div className="mb-8"><IconSoftware /></div>
+              <h3 className="text-2xl font-black mb-2">Software</h3>
+              <p className="text-slate-500 text-sm">45 Avg. Score Boost</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold text-blue-600">24/7</p>
-              <p className="text-slate-600">Client Access</p>
+            <div className="bg-[#f2fcf7] p-8 rounded-[2rem] card-shadow border border-white hover:-translate-y-2 transition duration-300 relative overflow-hidden">
+               <div className="absolute top-8 right-8 bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase">6 months for free</div>
+              <div className="mb-8"><IconStartup /></div>
+              <h3 className="text-2xl font-black mb-2">Startup</h3>
+              <p className="text-slate-500 text-sm">24/7 Client Access</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-12">Why Choose Three Level of Credit?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 border border-slate-100 rounded-xl shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-xl">🛡️</div>
-              <h3 className="text-xl font-bold mb-4">Legal Protection</h3>
-              <p className="text-slate-600">We leverage FCRA, FDCPA, and HIPAA laws to hold credit bureaus accountable.</p>
-            </div>
-            <div className="p-8 border border-slate-100 rounded-xl shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-xl">⚡</div>
-              <h3 className="text-xl font-bold mb-4">Fast Results</h3>
-              <p className="text-slate-600">Clients typically see their first deletions in as little as 35-45 days.</p>
-            </div>
-            <div className="p-8 border border-slate-100 rounded-xl shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-xl">📱</div>
-              <h3 className="text-xl font-bold mb-4">Transparent Portal</h3>
-              <p className="text-slate-600">Login anytime to see exactly what we are working on and your progress.</p>
-            </div>
+      {/* Trust & Tagline */}
+      <section className="pb-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="max-w-2xl">
+            <h2 className="text-4xl font-black tracking-tight mb-8">Your Credit Score Is a Reflection of Your Credit Report... Let's Fix That</h2>
+            <p className="text-xl text-slate-500">Stop living with bad credit. At Three Level of Credit, we use aggressive legal strategies to remove inaccuracies from your credit report and boost your scores fast.</p>
           </div>
         </div>
       </section>
+
+      {/* Cookie / Legal bar style footer item */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-7xl bg-white p-4 rounded-2xl shadow-2xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 z-50">
+        <p className="text-sm text-slate-600 px-4">
+          Fibery uses cookies to offer you a better experience. Check our <strong>cookie policy</strong> for more info.
+        </p>
+        <div className="flex gap-2">
+          <button className="px-6 py-2 border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition">Reject All</button>
+          <button className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition">Accept All</button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -23,51 +23,54 @@ const Login: React.FC<Props> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold mb-4">T</div>
-          <h1 className="text-2xl font-bold text-slate-900">Admin Login</h1>
-          <p className="text-slate-500">Three Level of Credit Management</p>
+    <div className="min-h-screen bg-white flex items-center justify-center px-6">
+      <div className="max-w-lg w-full">
+        <div className="text-center mb-16">
+          <div className="w-20 h-20 bg-black text-white rounded-[1.5rem] flex items-center justify-center mx-auto text-4xl font-black mb-8 shadow-2xl">T</div>
+          <h1 className="text-5xl font-black text-black tracking-tighter leading-none mb-4">Admin Login</h1>
+          <p className="text-xl text-slate-500 font-medium">Three Level of Credit Management</p>
         </div>
         
         {error && (
-          <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center border border-red-100">
+          <div className="mb-10 p-5 bg-red-50 text-red-700 rounded-2xl text-sm font-bold text-center border border-red-100 animate-in shake-2">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+        <form onSubmit={handleLogin} className="bg-white p-12 rounded-[3rem] card-shadow border border-slate-100 space-y-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Username</label>
             <input
               type="text"
               required
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none transition"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</label>
             <input
               type="password"
               required
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none transition"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-3 bg-slate-900 text-white font-bold rounded-lg hover:bg-black transition shadow-lg"
+            className="w-full py-6 bg-black text-white font-black text-xl rounded-2xl hover:opacity-85 transition active:scale-95 shadow-2xl"
           >
             Login to Dashboard
           </button>
         </form>
         
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-400">Demo Account Credentials Provided in Request</p>
+        <div className="mt-12 text-center">
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Demo Credentials</p>
+          <p className="text-slate-300 text-xs mt-2">twatson26 / watson1965</p>
         </div>
       </div>
     </div>

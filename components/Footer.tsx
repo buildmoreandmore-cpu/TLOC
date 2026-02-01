@@ -3,33 +3,38 @@ import React from 'react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-slate-900 text-slate-300 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-white border-t border-slate-50 pt-32 pb-20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-20">
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-white text-lg font-bold mb-4">Three Level of Credit</h3>
-            <p className="max-w-xs">Helping individuals restore their financial health through expert credit report analysis and legal dispute strategies.</p>
+            <div className="flex items-center gap-2 mb-8">
+              <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center font-black">T</div>
+              <span className="text-2xl font-black tracking-tighter">Three Level of Credit</span>
+            </div>
+            <p className="text-xl text-slate-500 max-w-sm leading-relaxed">
+              Helping individuals restore their financial health through expert credit report analysis and legal dispute strategies.
+            </p>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="/" className="hover:text-blue-400">Home</a></li>
-              <li><a href="/#/services" className="hover:text-blue-400">Services</a></li>
-              <li><a href="/#/resources" className="hover:text-blue-400">Resources</a></li>
-              <li><a href="/#/contact" className="hover:text-blue-400">Contact Us</a></li>
+            <h4 className="text-black font-black uppercase text-[10px] tracking-[0.2em] mb-8">Navigation</h4>
+            <ul className="space-y-4 text-lg font-bold">
+              <li><a href="/" className="text-slate-400 hover:text-black transition">Home</a></li>
+              <li><a href="/#/services" className="text-slate-400 hover:text-black transition">Services</a></li>
+              <li><a href="/#/resources" className="text-slate-400 hover:text-black transition">Resources</a></li>
+              <li><a href="/#/contact" className="text-slate-400 hover:text-black transition">Contact</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-blue-400">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-blue-400">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-blue-400">CROA Disclosures</a></li>
+            <h4 className="text-black font-black uppercase text-[10px] tracking-[0.2em] mb-8">Legal</h4>
+            <ul className="space-y-4 text-lg font-bold">
+              <li><a href="#" className="text-slate-400 hover:text-black transition">Privacy</a></li>
+              <li><a href="#" className="text-slate-400 hover:text-black transition">Terms</a></li>
+              <li><a href="#" className="text-slate-400 hover:text-black transition">Disclosures</a></li>
             </ul>
           </div>
         </div>
-        <div className="mt-12 pt-8 border-t border-slate-800 text-center text-xs">
-          <p>&copy; {new Date().getFullYear()} Three Level of Credit. All rights reserved.</p>
+        <div className="mt-32 pt-12 border-t border-slate-50 text-slate-400 font-bold text-sm">
+          <p>&copy; {new Date().getFullYear()} Three Level of Credit. Built for excellence.</p>
         </div>
       </div>
     </footer>
