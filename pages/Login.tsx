@@ -26,9 +26,9 @@ const Login: React.FC<Props> = ({ onLogin }) => {
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
       <div className="max-w-lg w-full">
         <div className="text-center mb-16">
-          <div className="w-20 h-20 bg-black text-white rounded-[1.5rem] flex items-center justify-center mx-auto text-4xl font-black mb-8 shadow-2xl">T</div>
+          <div className="w-20 h-20 bg-blue-600 text-white rounded-[1.5rem] flex items-center justify-center mx-auto text-4xl font-black mb-8 shadow-2xl">3</div>
           <h1 className="text-5xl font-black text-black tracking-tighter leading-none mb-4">Admin Login</h1>
-          <p className="text-xl text-slate-500 font-medium">Three Level of Credit Management</p>
+          <p className="text-xl text-slate-500 font-medium">Three Level Credit Management</p>
         </div>
         
         {error && (

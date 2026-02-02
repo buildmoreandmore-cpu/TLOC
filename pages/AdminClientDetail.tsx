@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Client, DisputeLetter } from '../types';
 import { DISPUTE_TEMPLATES } from '../constants';
 import { generateDisputeLetter } from '../geminiService';
-import { Upload, FileText, AlertTriangle, CheckCircle, Lightbulb, X, Copy, Download, DollarSign } from 'lucide-react';
+import { Upload, FileText, AlertTriangle, CheckCircle, Lightbulb, X, Copy, Download, DollarSign, Send } from 'lucide-react';
+import SendMailModal from '../components/SendMailModal';
 
 interface Props {
   clients: Client[];
@@ -87,6 +88,8 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [generating, setGenerating] = useState(false);
   const [previewLetter, setPreviewLetter] = useState('');
+  const [savedLetter, setSavedLetter] = useState<DisputeLetter | null>(null);
+  const [showSendModal, setShowSendModal] = useState(false);
 
   // Pricing state
   const [useCustomPrice, setUseCustomPrice] = useState(false);
@@ -324,9 +327,19 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
       price: letterPrice
     };
     setLetters([newLetter, ...letters]);
+    setSavedLetter(newLetter);
     setPreviewLetter('');
     setSelectedItems([]);
-    alert(`Letter saved! Price: $${letterPrice.toFixed(2)}`);
+  };
+
+  const handleSendSuccess = (letterId: string, mailData: Partial<DisputeLetter>) => {
+    setLetters(prev => prev.map(letter =>
+      letter.id === letterId
+        ? { ...letter, ...mailData }
+        : letter
+    ));
+    setShowSendModal(false);
+    setSavedLetter(null);
   };
 
   const clearAnalysis = () => {
@@ -686,8 +699,49 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
             </div>
           )}
 
+          {/* Saved Letter - Ready to Send */}
+          {savedLetter && !previewLetter && (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-green-400">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Letter Saved Successfully!</h3>
+                  <p className="text-sm text-slate-500">Price: ${savedLetter.price?.toFixed(2) || '0.00'}</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl mb-4">
+                <p className="text-sm text-slate-600 font-mono line-clamp-3">{savedLetter.content.substring(0, 200)}...</p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSendModal(true)}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <Send className="h-5 w-5" />
+                  Send Letter Now
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard/letters')}
+                  className="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition"
+                >
+                  View All Letters
+                </button>
+                <button
+                  onClick={() => setSavedLetter(null)}
+                  className="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition"
+                >
+                  Create Another
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* No Analysis Yet - Show Prompt */}
-          {!analysisResult && !previewLetter && (
+          {!analysisResult && !previewLetter && !savedLetter && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
@@ -702,6 +756,15 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
           )}
         </div>
       </div>
+
+      {/* Send Mail Modal */}
+      {savedLetter && showSendModal && (
+        <SendMailModal
+          letter={savedLetter}
+          onClose={() => setShowSendModal(false)}
+          onSendSuccess={handleSendSuccess}
+        />
+      )}
     </div>
   );
 };
