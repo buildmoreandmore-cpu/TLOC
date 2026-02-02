@@ -80,63 +80,63 @@ const Services: React.FC = () => {
   ];
 
   return (
-    <div className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+    <div className="py-12 sm:py-16 lg:py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
         {/* Hero */}
-        <div className="max-w-4xl mb-16">
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-bold mb-6">
-            <Star className="h-4 w-4" />
+        <div className="max-w-4xl mb-10 sm:mb-16">
+          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold mb-4 sm:mb-6">
+            <Star className="h-3 w-3 sm:h-4 sm:w-4" />
             Three Level Credit
           </div>
-          <h1 className="text-5xl md:text-6xl font-black text-black tracking-tighter mb-6 leading-none">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-black tracking-tighter mb-4 sm:mb-6 leading-none">
             Our Credit Services
           </h1>
-          <p className="text-xl text-slate-600">
+          <p className="text-base sm:text-lg lg:text-xl text-slate-600">
             Three Level Credit provides comprehensive credit improvement services tailored to your unique situation. Our proven approach has helped hundreds of clients achieve their credit goals.
           </p>
         </div>
 
         {/* Why Choose Us */}
-        <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl p-8 md:p-12 mb-16">
-          <div className="grid md:grid-cols-3 gap-8">
+        <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 mb-10 sm:mb-16">
+          <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck className="h-8 w-8 text-blue-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Your Rights Protected</h3>
-              <p className="text-slate-300 text-sm">We leverage consumer protection laws to fight for accurate credit reporting.</p>
+              <h3 className="text-base sm:text-xl font-bold text-white mb-2">Your Rights Protected</h3>
+              <p className="text-slate-300 text-xs sm:text-sm">We leverage consumer protection laws to fight for accurate credit reporting.</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-8 w-8 text-green-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Mail className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Certified Mail</h3>
-              <p className="text-slate-300 text-sm">All communications sent via certified mail with tracking for your records.</p>
+              <h3 className="text-base sm:text-xl font-bold text-white mb-2">Certified Mail</h3>
+              <p className="text-slate-300 text-xs sm:text-sm">All communications sent via certified mail with tracking for your records.</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Clock className="h-8 w-8 text-purple-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Timely Follow-Up</h3>
-              <p className="text-slate-300 text-sm">We monitor deadlines and escalate when bureaus don't respond properly.</p>
+              <h3 className="text-base sm:text-xl font-bold text-white mb-2">Timely Follow-Up</h3>
+              <p className="text-slate-300 text-xs sm:text-sm">We monitor deadlines and escalate when bureaus don't respond properly.</p>
             </div>
           </div>
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-24">
           {services.map((service, index) => (
-            <div key={index} className="bg-white border border-slate-200 rounded-3xl p-8 hover:shadow-xl hover:border-slate-300 transition duration-300">
-              <div className={`${service.color} p-4 rounded-2xl w-fit mb-6`}>
-                <service.icon className="h-8 w-8 text-white" />
+            <div key={index} className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:shadow-xl hover:border-slate-300 transition duration-300">
+              <div className={`${service.color} p-3 sm:p-4 rounded-xl sm:rounded-2xl w-fit mb-4 sm:mb-6`}>
+                <service.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-black text-black mb-3">{service.title}</h3>
-              <p className="text-slate-600 mb-6">{service.description}</p>
-              <ul className="space-y-3">
+              <h3 className="text-xl sm:text-2xl font-black text-black mb-2 sm:mb-3">{service.title}</h3>
+              <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6">{service.description}</p>
+              <ul className="space-y-2 sm:space-y-3">
                 {service.benefits.map((benefit, bIndex) => (
-                  <li key={bIndex} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-slate-700">{benefit}</span>
+                  <li key={bIndex} className="flex items-start gap-2 sm:gap-3">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-slate-700">{benefit}</span>
                   </li>
                 ))}
               </ul>
@@ -145,35 +145,35 @@ const Services: React.FC = () => {
         </div>
 
         {/* How It Works */}
-        <div className="mb-24">
-          <h2 className="text-3xl font-black text-center mb-4">The Three Level Approach</h2>
-          <p className="text-slate-500 text-center mb-12 max-w-2xl mx-auto">Our proven methodology for credit improvement</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="mb-12 sm:mb-24">
+          <h2 className="text-2xl sm:text-3xl font-black text-center mb-3 sm:mb-4">The Three Level Approach</h2>
+          <p className="text-sm sm:text-base text-slate-500 text-center mb-8 sm:mb-12 max-w-2xl mx-auto">Our proven methodology for credit improvement</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {[
               { level: "1", title: "Analyze", desc: "We thoroughly review your credit reports from all three bureaus to identify every issue affecting your score.", color: "blue" },
               { level: "2", title: "Dispute", desc: "Our team prepares and sends professional dispute letters, tracking every communication and deadline.", color: "green" },
               { level: "3", title: "Elevate", desc: "We help you build positive credit history and maintain your improved credit score long-term.", color: "purple" },
             ].map((item, index) => (
               <div key={index} className="text-center">
-                <div className={`w-20 h-20 bg-${item.color}-600 text-white rounded-2xl flex items-center justify-center text-3xl font-black mx-auto mb-6`}>
+                <div className={`w-14 h-14 sm:w-20 sm:h-20 bg-${item.color}-600 text-white rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black mx-auto mb-4 sm:mb-6`}>
                   {item.level}
                 </div>
-                <h3 className="font-bold text-2xl mb-3">{item.title}</h3>
-                <p className="text-slate-500">{item.desc}</p>
+                <h3 className="font-bold text-xl sm:text-2xl mb-2 sm:mb-3">{item.title}</h3>
+                <p className="text-sm sm:text-base text-slate-500">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-12 md:p-16 text-center text-white">
-          <h2 className="text-4xl md:text-5xl font-black mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-16 text-center text-white">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-4 sm:mb-6">Ready to Get Started?</h2>
+          <p className="text-base sm:text-lg lg:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto">
             Schedule your free consultation and learn how Three Level Credit can help you achieve your credit goals.
           </p>
-          <Link to="/contact" className="inline-flex items-center gap-2 bg-yellow-400 text-slate-900 px-10 py-5 rounded-2xl font-black text-xl hover:bg-yellow-300 transition">
+          <Link to="/contact" className="inline-flex items-center gap-2 bg-yellow-400 text-slate-900 px-6 sm:px-10 py-3 sm:py-5 rounded-xl sm:rounded-2xl font-black text-base sm:text-xl hover:bg-yellow-300 transition">
             Free Consultation
-            <ArrowRight className="h-6 w-6" />
+            <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
           </Link>
         </div>
       </div>
