@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Client, DisputeLetter } from '../types';
+import { Client, DisputeLetter, NegativeItem, AnalysisResult, BureauReport } from '../types';
 import { DISPUTE_TEMPLATES } from '../constants';
-import { generateDisputeLetter } from '../geminiService';
+import { generateDisputeLetter, analyzeCreditReport } from '../geminiService';
 import { Upload, FileText, AlertTriangle, CheckCircle, Lightbulb, X, Copy, Download, DollarSign, Send } from 'lucide-react';
 import SendMailModal from '../components/SendMailModal';
 
@@ -14,16 +14,13 @@ interface Props {
   setLetters: React.Dispatch<React.SetStateAction<DisputeLetter[]>>;
 }
 
-interface AnalysisResult {
-  collections: string[];
-  latePayments: string[];
-  chargeOffs: string[];
-  inquiries: string[];
-  publicRecords: string[];
-  identityIssues: string[];
-  recommendedTemplates: typeof DISPUTE_TEMPLATES;
-  summary: string;
-}
+type BureauKey = 'equifax' | 'experian' | 'transunion';
+
+const BUREAUS: { key: BureauKey; label: string; color: string }[] = [
+  { key: 'equifax', label: 'Equifax', color: 'red' },
+  { key: 'experian', label: 'Experian', color: 'blue' },
+  { key: 'transunion', label: 'TransUnion', color: 'green' },
+];
 
 // Prices based on credit repair type with customer-facing explanations
 const LETTER_PRICES: Record<string, { label: string; price: number; script: string }> = {
@@ -96,11 +93,9 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
   const [customPrice, setCustomPrice] = useState('');
   const [letterPrice, setLetterPrice] = useState(50);
 
-  // Credit report analysis state
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [reportText, setReportText] = useState('');
+  // Bureau tab state
+  const [activeTab, setActiveTab] = useState<BureauKey>('equifax');
+  const [analyzingBureau, setAnalyzingBureau] = useState<BureauKey | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   // Get price based on selected template category
@@ -143,47 +138,7 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
     );
   };
 
-  // Handle file upload
-  const handleFileUpload = async (file: File) => {
-    setUploadedFile(file);
-    setAnalyzing(true);
-    setAnalysisResult(null);
-
-    try {
-      let text = '';
-
-      if (file.type === 'text/plain') {
-        text = await file.text();
-      } else if (file.type === 'application/pdf') {
-        // For PDF, we'll extract what we can or simulate analysis
-        text = await file.text().catch(() => '');
-        if (!text) {
-          // Simulate PDF content extraction
-          text = `Credit Report for ${client.name} - PDF uploaded`;
-        }
-      } else {
-        text = await file.text();
-      }
-
-      setReportText(text);
-
-      // Analyze the report
-      const analysis = analyzeReport(text);
-      setAnalysisResult(analysis);
-
-      // Auto-select the first recommended template
-      if (analysis.recommendedTemplates.length > 0) {
-        setSelectedTemplate(analysis.recommendedTemplates[0].id);
-      }
-    } catch (err) {
-      console.error('Error reading file:', err);
-      alert('Error reading file. Please try again.');
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  // Analyze credit report text and recommend templates
+  // Analyze credit report text and recommend templates (local keyword analysis)
   const analyzeReport = (text: string): AnalysisResult => {
     const lowerText = text.toLowerCase();
 
@@ -195,14 +150,12 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
     const identityIssues: string[] = [];
     const recommendedTemplateIds: Set<string> = new Set();
 
-    // Detect collections
     if (lowerText.includes('collection') || lowerText.includes('debt buyer') || lowerText.includes('assigned')) {
       collections.push('Collection account detected');
       recommendedTemplateIds.add('debt_validation');
       recommendedTemplateIds.add('bureau_dispute_not_mine');
     }
 
-    // Detect late payments
     if (lowerText.includes('late') || lowerText.includes('30 days') || lowerText.includes('60 days') || lowerText.includes('90 days') || lowerText.includes('past due')) {
       latePayments.push('Late payment history detected');
       recommendedTemplateIds.add('late_payment_dispute');
@@ -210,53 +163,44 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
       recommendedTemplateIds.add('late_payment_affidavit');
     }
 
-    // Detect charge-offs
     if (lowerText.includes('charge off') || lowerText.includes('charged off') || lowerText.includes('charge-off')) {
       chargeOffs.push('Charge-off detected');
       recommendedTemplateIds.add('bureau_dispute_inaccurate');
       recommendedTemplateIds.add('pay_for_delete');
     }
 
-    // Detect inquiries
     if (lowerText.includes('inquiry') || lowerText.includes('inquiries') || lowerText.includes('hard pull')) {
       inquiries.push('Hard inquiries detected');
       recommendedTemplateIds.add('unauthorized_inquiry_bureau');
       recommendedTemplateIds.add('unauthorized_inquiry_creditor');
     }
 
-    // Detect public records
     if (lowerText.includes('bankruptcy') || lowerText.includes('judgment') || lowerText.includes('lien') || lowerText.includes('foreclosure')) {
       publicRecords.push('Public record detected');
       recommendedTemplateIds.add('bureau_dispute_inaccurate');
     }
 
-    // Detect identity issues
     if (lowerText.includes('fraud') || lowerText.includes('identity theft') || lowerText.includes('not mine') || lowerText.includes('unknown account')) {
       identityIssues.push('Potential identity theft indicators');
       recommendedTemplateIds.add('bureau_dispute_identity_theft');
       recommendedTemplateIds.add('identity_affidavit');
     }
 
-    // Detect re-insertion (rare but valuable)
-    if (lowerText.includes('reinsert') || lowerText.includes('re-insert') || lowerText.includes('deleted') && lowerText.includes('back')) {
+    if (lowerText.includes('reinsert') || lowerText.includes('re-insert') || (lowerText.includes('deleted') && lowerText.includes('back'))) {
       recommendedTemplateIds.add('reinsertion_violation');
     }
 
-    // Detect verification issues
     if (lowerText.includes('verified') || lowerText.includes('dispute') || lowerText.includes('investigation')) {
       recommendedTemplateIds.add('method_of_verification');
     }
 
-    // If nothing specific found, recommend general bureau dispute
     if (recommendedTemplateIds.size === 0) {
       recommendedTemplateIds.add('bureau_dispute_not_mine');
       recommendedTemplateIds.add('bureau_dispute_inaccurate');
     }
 
-    // Get full template objects for recommended templates
     const recommendedTemplates = DISPUTE_TEMPLATES.filter(t => recommendedTemplateIds.has(t.id));
 
-    // Build summary
     const issues: string[] = [];
     if (collections.length) issues.push(`${collections.length} collection issue(s)`);
     if (latePayments.length) issues.push(`late payment history`);
@@ -269,16 +213,89 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
       ? `Found: ${issues.join(', ')}. We recommend ${recommendedTemplates.length} dispute letter(s) for this client.`
       : 'No major issues detected. Consider a general bureau dispute for any inaccuracies.';
 
-    return {
-      collections,
-      latePayments,
-      chargeOffs,
-      inquiries,
-      publicRecords,
-      identityIssues,
-      recommendedTemplates,
-      summary,
-    };
+    return { collections, latePayments, chargeOffs, inquiries, publicRecords, identityIssues, recommendedTemplates, summary };
+  };
+
+  // Handle file upload for a specific bureau
+  const handleBureauUpload = async (file: File, bureau: BureauKey) => {
+    setAnalyzingBureau(bureau);
+
+    try {
+      let text = '';
+      if (file.type === 'text/plain') {
+        text = await file.text();
+      } else if (file.type === 'application/pdf') {
+        text = await file.text().catch(() => '');
+        if (!text) {
+          text = `Credit Report for ${client.name} - PDF uploaded (${bureau})`;
+        }
+      } else {
+        text = await file.text();
+      }
+
+      // Run local keyword analysis
+      const localAnalysis = analyzeReport(text);
+
+      // Build the bureau report object
+      const bureauReport: BureauReport = {
+        fileName: file.name,
+        text,
+        uploadedAt: new Date().toISOString(),
+        analysisResult: localAnalysis,
+      };
+
+      // Update client with bureau report
+      const updatedReports = { ...client.creditReports, [bureau]: bureauReport };
+
+      // Try AI extraction for auto-populating negative items
+      let aiItems: NegativeItem[] = [];
+      try {
+        const aiResult = await analyzeCreditReport(text);
+        if (Array.isArray(aiResult)) {
+          aiItems = aiResult.map((item: any) => ({
+            id: item.id || `AI-${bureau}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            creditor: item.creditor || 'Unknown',
+            type: item.type || 'Unknown',
+            balance: item.balance || 0,
+            status: item.status || 'Unknown',
+            dateReported: item.dateReported || '',
+            bureau,
+            reasonForDispute: item.reasonForDispute || '',
+          }));
+        }
+      } catch (aiErr) {
+        console.warn('AI extraction unavailable, using local analysis only:', aiErr);
+      }
+
+      // Merge AI-extracted items into client's negativeItems (deduplicate by creditor+type+bureau)
+      const existingItems = client.negativeItems;
+      const newItems = aiItems.filter(newItem =>
+        !existingItems.some(existing =>
+          existing.creditor.toLowerCase() === newItem.creditor.toLowerCase() &&
+          existing.type.toLowerCase() === newItem.type.toLowerCase() &&
+          existing.bureau === newItem.bureau
+        )
+      );
+
+      const mergedItems = [...existingItems, ...newItems];
+
+      // Persist to client state
+      setClients(prev => prev.map(c =>
+        c.id === client.id
+          ? { ...c, creditReports: updatedReports, negativeItems: mergedItems }
+          : c
+      ));
+
+      // Auto-select first recommended template if none selected
+      if (!selectedTemplate && localAnalysis.recommendedTemplates.length > 0) {
+        setSelectedTemplate(localAnalysis.recommendedTemplates[0].id);
+      }
+    } catch (err) {
+      console.error('Error reading file:', err);
+      alert('Error reading file. Please try again.');
+    } finally {
+      setAnalyzingBureau(null);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -296,7 +313,7 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
+      handleBureauUpload(e.dataTransfer.files[0], activeTab);
     }
   };
 
@@ -342,12 +359,51 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
     setSavedLetter(null);
   };
 
-  const clearAnalysis = () => {
-    setUploadedFile(null);
-    setAnalysisResult(null);
-    setReportText('');
+  const clearBureauReport = (bureau: BureauKey) => {
+    const updatedReports = { ...client.creditReports };
+    delete updatedReports[bureau];
+    // Remove negative items from this bureau
+    const updatedItems = client.negativeItems.filter(item => item.bureau !== bureau);
+    setClients(prev => prev.map(c =>
+      c.id === client.id
+        ? { ...c, creditReports: updatedReports, negativeItems: updatedItems }
+        : c
+    ));
     setSelectedTemplate('');
   };
+
+  // Get the current bureau's report
+  const currentBureauReport = client.creditReports?.[activeTab];
+
+  // Combine analysis results from all uploaded bureaus for recommendations
+  const getCombinedAnalysis = (): AnalysisResult | null => {
+    const reports = client.creditReports;
+    if (!reports) return null;
+
+    const allResults = BUREAUS
+      .map(b => reports[b.key]?.analysisResult)
+      .filter((r): r is AnalysisResult => !!r);
+
+    if (allResults.length === 0) return null;
+
+    return {
+      collections: allResults.flatMap(r => r.collections),
+      latePayments: allResults.flatMap(r => r.latePayments),
+      chargeOffs: allResults.flatMap(r => r.chargeOffs),
+      inquiries: allResults.flatMap(r => r.inquiries),
+      publicRecords: allResults.flatMap(r => r.publicRecords),
+      identityIssues: allResults.flatMap(r => r.identityIssues),
+      recommendedTemplates: Array.from(
+        new Map(
+          allResults.flatMap(r => r.recommendedTemplates).map(t => [t.id, t])
+        ).values()
+      ),
+      summary: `Analysis across ${allResults.length} bureau(s). ${allResults.map(r => r.summary).join(' ')}`,
+    };
+  };
+
+  const combinedAnalysis = getCombinedAnalysis();
+  const hasAnyReport = BUREAUS.some(b => client.creditReports?.[b.key]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -389,8 +445,8 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
           {/* Existing Negative Items */}
           {client.negativeItems.length > 0 && (
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h3 className="font-bold text-slate-800 mb-4">Known Negative Items</h3>
-              <div className="space-y-3">
+              <h3 className="font-bold text-slate-800 mb-4">Negative Items ({client.negativeItems.length})</h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {client.negativeItems.map((item) => (
                   <label key={item.id} className={`block p-3 border rounded-lg cursor-pointer transition text-sm ${
                     selectedItems.includes(item.id) ? 'border-blue-500 bg-blue-50' : 'border-slate-100 hover:border-slate-300'
@@ -402,9 +458,21 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                         onChange={() => handleToggleItem(item.id)}
                         className="w-4 h-4 rounded border-slate-300"
                       />
-                      <div>
-                        <div className="font-semibold text-slate-900">{item.creditor}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-slate-900 truncate">{item.creditor}</div>
                         <div className="text-xs text-slate-500">{item.type} • ${item.balance}</div>
+                        {item.bureau && (
+                          <span className={`inline-block mt-1 text-xs px-1.5 py-0.5 rounded font-medium ${
+                            item.bureau === 'equifax' ? 'bg-red-100 text-red-700' :
+                            item.bureau === 'experian' ? 'bg-blue-100 text-blue-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {item.bureau.charAt(0).toUpperCase() + item.bureau.slice(1)}
+                          </span>
+                        )}
+                        {item.reasonForDispute && (
+                          <p className="text-xs text-slate-400 mt-1 truncate">{item.reasonForDispute}</p>
+                        )}
                       </div>
                     </div>
                   </label>
@@ -416,19 +484,38 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
 
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Credit Report Upload */}
+          {/* Credit Report Upload - Bureau Tabs */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">Credit Report Analysis</h2>
-              {analysisResult && (
-                <button onClick={clearAnalysis} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1">
-                  <X className="h-4 w-4" />
-                  Clear
-                </button>
-              )}
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Credit Report Analysis</h2>
+
+            {/* Bureau Tabs */}
+            <div className="flex border-b border-slate-200 mb-4">
+              {BUREAUS.map((bureau) => {
+                const report = client.creditReports?.[bureau.key];
+                const isActive = activeTab === bureau.key;
+                return (
+                  <button
+                    key={bureau.key}
+                    onClick={() => setActiveTab(bureau.key)}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition -mb-px ${
+                      isActive
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    {bureau.label}
+                    {report ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-slate-300" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            {!analysisResult ? (
+            {/* Active Bureau Upload Zone */}
+            {!currentBureauReport ? (
               <div
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -438,16 +525,17 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                   dragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-400'
                 }`}
               >
-                {analyzing ? (
+                {analyzingBureau === activeTab ? (
                   <div className="flex flex-col items-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                    <p className="text-slate-600 font-medium">Analyzing credit report...</p>
+                    <p className="text-slate-600 font-medium">Analyzing {BUREAUS.find(b => b.key === activeTab)?.label} report...</p>
+                    <p className="text-sm text-slate-400 mt-1">Extracting negative items with AI</p>
                   </div>
                 ) : (
                   <>
                     <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                     <p className="text-slate-600 font-medium mb-2">
-                      Upload client's credit report for analysis
+                      Upload {BUREAUS.find(b => b.key === activeTab)?.label} credit report
                     </p>
                     <p className="text-sm text-slate-400 mb-4">
                       Drag & drop or click to select • PDF, TXT supported
@@ -458,7 +546,7 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                       <input
                         type="file"
                         accept=".pdf,.txt,.text"
-                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                        onChange={(e) => e.target.files?.[0] && handleBureauUpload(e.target.files[0], activeTab)}
                         className="hidden"
                       />
                     </label>
@@ -471,67 +559,100 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
                 <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
-                    <p className="font-medium text-green-800">{uploadedFile?.name}</p>
-                    <p className="text-sm text-green-600">Analysis complete</p>
+                    <p className="font-medium text-green-800">{currentBureauReport.fileName}</p>
+                    <p className="text-sm text-green-600">
+                      Uploaded {new Date(currentBureauReport.uploadedAt).toLocaleDateString()}
+                    </p>
                   </div>
+                  <button
+                    onClick={() => clearBureauReport(activeTab)}
+                    className="text-sm text-slate-500 hover:text-red-600 flex items-center gap-1"
+                  >
+                    <X className="h-4 w-4" />
+                    Remove
+                  </button>
                 </div>
 
-                {/* Analysis Summary */}
-                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-bold text-blue-900 mb-1">Analysis Summary</h4>
-                      <p className="text-sm text-blue-700">{analysisResult.summary}</p>
+                {/* Per-bureau Analysis Summary */}
+                {currentBureauReport.analysisResult && (
+                  <>
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-bold text-blue-900 mb-1">{BUREAUS.find(b => b.key === activeTab)?.label} Analysis</h4>
+                          <p className="text-sm text-blue-700">{currentBureauReport.analysisResult.summary}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Issues Found */}
-                <div className="grid grid-cols-2 gap-3">
-                  {analysisResult.collections.length > 0 && (
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <p className="text-xs font-bold text-red-700 uppercase">Collections</p>
-                      <p className="text-sm text-red-600">{analysisResult.collections.length} found</p>
+                    {/* Issues Found */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {currentBureauReport.analysisResult.collections.length > 0 && (
+                        <div className="p-3 bg-red-50 rounded-lg">
+                          <p className="text-xs font-bold text-red-700 uppercase">Collections</p>
+                          <p className="text-sm text-red-600">{currentBureauReport.analysisResult.collections.length} found</p>
+                        </div>
+                      )}
+                      {currentBureauReport.analysisResult.latePayments.length > 0 && (
+                        <div className="p-3 bg-yellow-50 rounded-lg">
+                          <p className="text-xs font-bold text-yellow-700 uppercase">Late Payments</p>
+                          <p className="text-sm text-yellow-600">Detected</p>
+                        </div>
+                      )}
+                      {currentBureauReport.analysisResult.chargeOffs.length > 0 && (
+                        <div className="p-3 bg-orange-50 rounded-lg">
+                          <p className="text-xs font-bold text-orange-700 uppercase">Charge-Offs</p>
+                          <p className="text-sm text-orange-600">{currentBureauReport.analysisResult.chargeOffs.length} found</p>
+                        </div>
+                      )}
+                      {currentBureauReport.analysisResult.inquiries.length > 0 && (
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <p className="text-xs font-bold text-purple-700 uppercase">Hard Inquiries</p>
+                          <p className="text-sm text-purple-600">Detected</p>
+                        </div>
+                      )}
+                      {currentBureauReport.analysisResult.identityIssues.length > 0 && (
+                        <div className="p-3 bg-pink-50 rounded-lg">
+                          <p className="text-xs font-bold text-pink-700 uppercase">Identity Issues</p>
+                          <p className="text-sm text-pink-600">Potential fraud</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {analysisResult.latePayments.length > 0 && (
-                    <div className="p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-xs font-bold text-yellow-700 uppercase">Late Payments</p>
-                      <p className="text-sm text-yellow-600">Detected</p>
-                    </div>
-                  )}
-                  {analysisResult.chargeOffs.length > 0 && (
-                    <div className="p-3 bg-orange-50 rounded-lg">
-                      <p className="text-xs font-bold text-orange-700 uppercase">Charge-Offs</p>
-                      <p className="text-sm text-orange-600">{analysisResult.chargeOffs.length} found</p>
-                    </div>
-                  )}
-                  {analysisResult.inquiries.length > 0 && (
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                      <p className="text-xs font-bold text-purple-700 uppercase">Hard Inquiries</p>
-                      <p className="text-sm text-purple-600">Detected</p>
-                    </div>
-                  )}
-                  {analysisResult.identityIssues.length > 0 && (
-                    <div className="p-3 bg-pink-50 rounded-lg">
-                      <p className="text-xs font-bold text-pink-700 uppercase">Identity Issues</p>
-                      <p className="text-sm text-pink-600">Potential fraud</p>
-                    </div>
-                  )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Bureau Upload Status Summary */}
+            {hasAnyReport && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Upload Status</p>
+                <div className="flex gap-3">
+                  {BUREAUS.map(bureau => {
+                    const report = client.creditReports?.[bureau.key];
+                    return (
+                      <div key={bureau.key} className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                        report ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {report ? <CheckCircle className="h-3 w-3" /> : <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
+                        {bureau.label}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Recommended Templates */}
-          {analysisResult && (
+          {/* Recommended Templates (based on combined analysis) */}
+          {combinedAnalysis && (
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Recommended Letters</h2>
-              <p className="text-sm text-slate-500 mb-4">Based on the credit report analysis, we recommend these dispute letters:</p>
+              <p className="text-sm text-slate-500 mb-4">Based on credit report analysis across all uploaded bureaus:</p>
 
               <div className="space-y-3">
-                {analysisResult.recommendedTemplates.map((template) => {
+                {combinedAnalysis.recommendedTemplates.map((template) => {
                   const priceInfo = LETTER_PRICES[template.category];
                   return (
                     <label
@@ -741,14 +862,14 @@ const AdminClientDetail: React.FC<Props> = ({ clients, setClients, letters, setL
           )}
 
           {/* No Analysis Yet - Show Prompt */}
-          {!analysisResult && !previewLetter && !savedLetter && (
+          {!hasAnyReport && !previewLetter && !savedLetter && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-amber-900 mb-1">Upload a Credit Report</h4>
+                  <h4 className="font-bold text-amber-900 mb-1">Upload Credit Reports</h4>
                   <p className="text-sm text-amber-700">
-                    Upload the client's credit report above to get AI-powered recommendations for which dispute letters will be most effective for their situation.
+                    Upload the client's credit reports from each bureau above to get AI-powered recommendations for which dispute letters will be most effective. Negative items will be automatically extracted and populated.
                   </p>
                 </div>
               </div>

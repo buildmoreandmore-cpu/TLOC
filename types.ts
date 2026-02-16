@@ -1,4 +1,22 @@
 
+export interface BureauReport {
+  fileName: string;
+  text: string;
+  uploadedAt: string;
+  analysisResult?: AnalysisResult;
+}
+
+export interface AnalysisResult {
+  collections: string[];
+  latePayments: string[];
+  chargeOffs: string[];
+  inquiries: string[];
+  publicRecords: string[];
+  identityIssues: string[];
+  recommendedTemplates: { id: string; name: string; category: string; description: string; legalBasis: string; useCase: string; mailMethod: string; successRate: string; content: string; attachments?: string[]; potentialDamages?: number }[];
+  summary: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -10,6 +28,11 @@ export interface Client {
   paymentStatus: 'paid' | 'unpaid';
   joinedDate: string;
   negativeItems: NegativeItem[];
+  creditReports?: {
+    equifax?: BureauReport;
+    experian?: BureauReport;
+    transunion?: BureauReport;
+  };
 }
 
 export interface NegativeItem {
@@ -19,6 +42,8 @@ export interface NegativeItem {
   balance: number;
   status: string;
   dateReported: string;
+  bureau?: 'equifax' | 'experian' | 'transunion';
+  reasonForDispute?: string;
 }
 
 export interface DisputeLetter {

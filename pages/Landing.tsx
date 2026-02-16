@@ -71,10 +71,13 @@ const Landing: React.FC = () => {
                 Three Level Credit helps you understand, dispute, and improve your credit report through our proven three-level approach.
               </p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-                <a href="#analyzer" className="px-5 sm:px-6 lg:px-8 py-3 sm:py-4 bg-blue-600 text-white rounded-xl font-bold text-base sm:text-lg hover:bg-blue-700 transition active:scale-95 shadow-xl shadow-blue-100 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => document.getElementById('analyzer')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="px-5 sm:px-6 lg:px-8 py-3 sm:py-4 bg-blue-600 text-white rounded-xl font-bold text-base sm:text-lg hover:bg-blue-700 transition active:scale-95 shadow-xl shadow-blue-100 flex items-center justify-center gap-2"
+                >
                   <Upload className="h-5 w-5" />
                   Free Credit Analysis
-                </a>
+                </button>
                 <Link to="/contact" className="px-5 sm:px-6 py-3 sm:py-4 bg-white border-2 border-blue-600 text-blue-600 rounded-xl font-bold text-base sm:text-lg hover:bg-blue-50 transition text-center">
                   Get Started
                 </Link>
